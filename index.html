@@ -1,0 +1,2216 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="zh-TW" class="ui">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
+<title>Dodge Grid</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --paper: #f8f9fa; --ink: #222; --overlay: rgba(255,255,255,0.94);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  html, body { height: 100%; overscroll-behavior: none; touch-action: none; }
+  html { background: #1a1a1a; min-height: 100vh; min-height: 100dvh; }
+  body { position: fixed !important; inset: 0; height: auto !important; width: 100%; }
+  html.ui, html.ui body { touch-action: manipulation; }
+  body { background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; position: relative; touch-action: none; }
+  #fps { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 8px; font-size: 11px; color: rgba(255,255,255,0.7); font-family: monospace; z-index: 20; pointer-events: none; }
+  #bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; pointer-events: none; }
+  #ui { font-size: 28px; font-weight: bold; color: #f8f9fa; }
+  #best { font-size: 18px; font-weight: bold; color: #f2c14e; }
+  #hint { font-size: 13px; color: #999; margin-top: 12px; pointer-events: none; }
+  canvas { background: #4f8a3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); touch-action: none; }
+  #gameover { position: absolute; display: none; flex-direction: column; align-items: center; background: var(--overlay); color: var(--ink); padding: 30px 50px; border: 3px solid var(--ink); border-radius: 12px; z-index: 3; }
+  button { margin-top: 15px; padding: 10px 25px; font-size: 18px; font-weight: bold; background: var(--ink); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+  button:active { transform: scale(0.95); }
+  .screen { position: fixed; inset: 0; background: #1a1a1a; color: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 10; padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(env(safe-area-inset-bottom, 0px) + 20px); text-align: center; }
+  .screen.hidden { display: none; }
+  .screen button { margin-top: 0; min-width: 200px; background: #f8f9fa; color: #222; }
+  .title { margin-bottom: 14px; }
+  .title .g { display: block; position: relative; }
+  .title .lt { display: block; overflow: visible; }
+  .title .gy { filter: drop-shadow(0 0 8px rgba(252,238,10,0.6)) drop-shadow(0 0 22px rgba(252,238,10,0.25)); }
+  .title .gc { filter: drop-shadow(0 0 8px rgba(0,240,255,0.6)) drop-shadow(0 0 22px rgba(0,240,255,0.25)); }
+  .title .gA { animation: glitchA 3.2s infinite steps(1); }
+  .title .gB { animation: glitchB 3.2s infinite steps(1); }
+  @keyframes glitchA { 0%,90%,100% { opacity: 0; } 92% { opacity: 1; transform: translate(-9px,0); } 95% { opacity: 1; transform: translate(7px,0); } }
+  @keyframes glitchB { 0%,86%,100% { opacity: 0; } 88% { opacity: 1; transform: translate(9px,0); } 93% { opacity: 1; transform: translate(-7px,0); } }
+  .title .g:last-child { margin-left: 100px; margin-top: -12px; }
+  .title .man { position: absolute; right: 100%; bottom: 5px; width: 103px; height: 100px; z-index: -1; margin-right: -8px; }
+  .title .mv, .title .aL, .title .aR, .title .lL, .title .lR { transform-origin: 0 0; animation: 3.2s infinite; }
+  .title .mv { animation-name: stepBody; }
+  .title .aL { transform-origin: 0 1px; animation-name: stepArmL; }
+  .title .aR { transform-origin: 0 1px; animation-name: stepArmR; }
+  .title .lL { transform-origin: 0 8px; animation-name: stepLegL; }
+  .title .lR { transform-origin: 0 8px; animation-name: stepLegR; }
+  @keyframes stepBody { 0%,8% { transform: none; } 12% { transform: translate(14px,1px) rotate(8deg); } 28%,50% { transform: translate(14px,0) rotate(0deg); } 54% { transform: translate(0,1px) rotate(-8deg); } 72%,100% { transform: none; } }
+  @keyframes stepArmL { 0%,8% { transform: none; } 12%,22% { transform: rotate(-135deg); } 28%,100% { transform: none; } }
+  @keyframes stepArmR { 0%,50% { transform: none; } 54%,64% { transform: rotate(135deg); } 70%,100% { transform: none; } }
+  @keyframes stepLegR { 0%,8% { d: path("M0 8L5 18"); } 12%,22% { d: path("M0 8L8 12L13 18"); } 28%,100% { d: path("M0 8L5 18"); } }
+  @keyframes stepLegL { 0%,50% { d: path("M0 8L-5 18"); } 54%,64% { d: path("M0 8L-8 12L-13 18"); } 70%,100% { d: path("M0 8L-5 18"); } }
+
+
+
+
+  #menu-best { display: none; }
+  .screen button small { display: block; font-size: 12px; font-weight: normal; opacity: 0.7; margin-top: 3px; }
+  #lvgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: min(100%, 440px, calc(100dvh - 250px)); }
+  .screen button.lvcard { position: relative; aspect-ratio: 1; min-width: 0; width: 100%; padding: 0; border: 3px solid rgba(248,249,250,0.9); border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 6px 16px rgba(0,0,0,0.5); transition: transform 0.12s; }
+  .screen button.lvcard:active { transform: scale(0.96); }
+  .lvcard canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .lvname { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 6px 12px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); color: #fff; font-size: 25px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .screen button.back { background: #666; color: #fff; }
+  #home { background: #666; margin-left: 8px; }
+  #pause { pointer-events: auto; display: none; align-items: center; justify-content: center; gap: 5px; width: 42px; height: 36px; margin: 0; padding: 0; background: rgba(255,255,255,0.16); border-radius: 8px; }
+  #pause span { display: block; width: 5px; height: 16px; background: #f8f9fa; border-radius: 2px; }
+  .vol { display: flex; align-items: center; gap: 10px; width: min(320px, 100%); font-size: 17px; }
+  .vol label { width: 40px; text-align: left; }
+  .vol input[type=range] { flex: 1; accent-color: #f2c14e; height: 32px; }
+  .vol span { width: 40px; text-align: right; color: #f2c14e; font-size: 15px; }
+  #transition { position: fixed; inset: 0; z-index: 50; display: none; }
+  #transition.on { display: block; }
+  #transition .tbg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #1b2a44, #070a10 70%); opacity: 0; transition: opacity 0.25s; }
+  #transition.close .tbg { opacity: 1; }
+  #transition.open .tbg { opacity: 0; transition: opacity 0.5s; }
+  #transition .pillar { position: absolute; inset: 0; }
+  #transition.in .pillar { transform: translateY(0); }
+  #transition .half { position: absolute; inset: 0; transition: transform 0.65s cubic-bezier(.7,0,.3,1); }
+  #transition .half.top { top: 0; }
+  #transition .half.bot { bottom: 0; }
+  #transition .half.top { transform: translateY(-100%); }
+  #transition .half.bot { transform: translateY(100%); }
+  #transition.close .half { transition-duration: 0.55s; }
+  #transition.close .half.top, #transition.close .half.bot { transform: translateY(0); }
+  #transition.open .half.top { transform: translateY(-100%); }
+  #transition.open .half.bot { transform: translateY(100%); }
+  #transition .seam { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #transition .seam path { fill: none; stroke: rgba(30,36,44,0.7); stroke-width: 2; }
+
+  #transition .face { position: absolute; left: 0; right: 0; top: 0; height: 100%; background: linear-gradient(90deg, #5a6068 0%, #aeb5be 16%, #eef2f6 36%, #fbfcfd 46%, #c4cbd4 62%, #8d949e 82%, #565c64 100%); }
+  #transition .half.top .face { top: 0; }
+  #transition .half.bot .face { top: 0; }
+  #transition .face::before, #transition .face::after { content: ''; position: absolute; left: 0; width: 100%; height: 16px; background: linear-gradient(180deg, rgba(40,46,54,0.55), rgba(255,255,255,0.35) 55%, rgba(40,46,54,0.35)); }
+  #transition .face::before { top: 12%; }
+  #transition .face::after { bottom: 12%; }
+  #transition .orb { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; filter: drop-shadow(0 0 3px #e8eef5) drop-shadow(0 6px 8px rgba(30,36,46,0.4)); transition: transform 0.9s cubic-bezier(.35,0,.65,1), filter 0.9s; }
+  #transition.spin .orb { transform: rotate(1080deg); filter: drop-shadow(0 0 22px #ffffff) drop-shadow(0 6px 8px rgba(30,36,46,0.4)); }
+  #transition .tt { position: absolute; left: 0; right: 0; top: calc(50% + 140px); text-align: center; font-size: 32px; font-weight: bold; color: #1b2430; letter-spacing: 6px; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 10px rgba(255,255,255,0.9); }
+  #transition.in .tt { opacity: 1; }
+  #transition::after { content: ''; position: absolute; inset: 0; background: #fff; opacity: 0; transition: opacity 0.12s; pointer-events: none; }
+  #transition.flash::after { opacity: 0.9; }
+  #transition .face { background: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, rgba(0,0,0,0.05) 1px 3px), linear-gradient(90deg, #5a6068 0%, #aeb5be 16%, #eef2f6 36%, #fbfcfd 46%, #c4cbd4 62%, #8d949e 82%, #565c64 100%); box-shadow: inset 0 0 70px rgba(0,0,0,0.5); }
+  #transition .face::before, #transition .face::after { background: radial-gradient(circle, rgba(255,255,255,0.85) 0 1.5px, rgba(20,24,30,0.6) 2px 3.5px, transparent 4.5px) 0 50% / 34px 16px repeat-x, linear-gradient(180deg, rgba(40,46,54,0.55), rgba(255,255,255,0.35) 55%, rgba(40,46,54,0.35)); }
+  #transition .seam path { stroke: rgba(70,80,95,0.85); stroke-width: 4; }
+  #transition .seam path.hl { stroke: rgba(255,255,255,0.6); stroke-width: 1.5; transform: translateY(3px); }
+  #transition .orb { transition: transform 1s cubic-bezier(.3,0,.2,1.04), filter 0.9s; }
+  #transition.slam .pillar { animation: tdSlam 0.4s ease-out; }
+  @keyframes tdSlam { 0% { transform: translateY(0); } 15% { transform: translateY(7px); } 35% { transform: translateY(-5px); } 55% { transform: translateY(3px); } 75% { transform: translateY(-1px); } 100% { transform: translateY(0); } }
+  #transition .bolt { position: absolute; top: calc(50% - 17px); width: 46px; height: 34px; z-index: 3; background: linear-gradient(180deg, #e9eef3, #8e97a2 45%, #4a5059 100%); box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.4); transition: transform 0.16s cubic-bezier(.6,0,.4,1); }
+  #transition .bolt.l { left: 0; width: calc(50% - 110px); border-radius: 0 6px 6px 0; transition: transform 0.35s cubic-bezier(.5,0,.3,1); }
+  #transition .bolt.r { left: calc(50% + 110px); width: calc(50% - 110px); border-radius: 6px 0 0 6px; transition: transform 0.35s cubic-bezier(.5,0,.3,1); }
+  #transition.unbolt .bolt.l { transform: translateX(-100%); }
+  #transition.unbolt .bolt.r { transform: translateX(100%); }
+  #transition .puff { position: absolute; top: calc(50% - 50px); width: 150px; height: 100px; z-index: 2; opacity: 0; pointer-events: none; filter: blur(6px); background: radial-gradient(ellipse, rgba(225,232,240,0.75), rgba(225,232,240,0) 70%); }
+  #transition .puff.l { left: -30px; }
+  #transition .puff.r { right: -30px; }
+  #transition .orb, #transition .bolt { opacity: 0; }
+  #transition.close .orb, #transition.close .bolt { opacity: 1; }
+  #transition.close .orb { transition: opacity 0.3s 0.2s, transform 1s cubic-bezier(.3,0,.2,1.04), filter 0.9s; }
+  #transition.close .bolt { transition: opacity 0.3s 0.2s, transform 0.35s cubic-bezier(.5,0,.3,1); }
+  #transition.slam .puff { animation: tdPuff 0.9s ease-out; }
+  #transition.open .puff { animation: tdPuff2 1s ease-out; }
+  @keyframes tdPuff { 0% { opacity: 0.8; transform: scale(0.4); } 100% { opacity: 0; transform: scale(1.8) translateY(-24px); } }
+  @keyframes tdPuff2 { 0% { opacity: 0.9; transform: scale(0.5); } 100% { opacity: 0; transform: scale(2.2) translateY(-30px); } }
+  #transition .plate { position: absolute; z-index: 1; width: 26%; height: 21%; border-radius: 6px; border: 2px solid; border-color: rgba(255,255,255,0.6) rgba(0,0,0,0.5) rgba(0,0,0,0.5) rgba(255,255,255,0.6); background: radial-gradient(circle, #fff 0 1px, #8a929c 2px, #2a2f36 3.5px, transparent 4.2px) 0 0 / 18px 18px no-repeat, radial-gradient(circle, #fff 0 1px, #8a929c 2px, #2a2f36 3.5px, transparent 4.2px) 100% 0 / 18px 18px no-repeat, radial-gradient(circle, #fff 0 1px, #8a929c 2px, #2a2f36 3.5px, transparent 4.2px) 0 100% / 18px 18px no-repeat, radial-gradient(circle, #fff 0 1px, #8a929c 2px, #2a2f36 3.5px, transparent 4.2px) 100% 100% / 18px 18px no-repeat, linear-gradient(135deg, rgba(255,255,255,0.22), rgba(0,0,0,0.2)); box-shadow: inset 0 0 16px rgba(0,0,0,0.35), 0 1px 2px rgba(255,255,255,0.35), 0 -1px 2px rgba(0,0,0,0.4); }
+  #transition .plate.a { left: 5%; top: 18%; }
+  #transition .plate.b { right: 5%; top: 18%; }
+  #transition .plate.c { left: 5%; bottom: 18%; }
+  #transition .plate.d { right: 5%; bottom: 18%; }
+  #transition .plate.a { -webkit-mask: radial-gradient(circle 140px at 173.08% 152.38%, transparent 139px, #000 140px); mask: radial-gradient(circle 140px at 173.08% 152.38%, transparent 139px, #000 140px); }
+  #transition .plate.b { -webkit-mask: radial-gradient(circle 140px at -73.08% 152.38%, transparent 139px, #000 140px); mask: radial-gradient(circle 140px at -73.08% 152.38%, transparent 139px, #000 140px); }
+  #transition .plate.c { -webkit-mask: radial-gradient(circle 140px at 173.08% -52.38%, transparent 139px, #000 140px); mask: radial-gradient(circle 140px at 173.08% -52.38%, transparent 139px, #000 140px); }
+  #transition .plate.d { -webkit-mask: radial-gradient(circle 140px at -73.08% -52.38%, transparent 139px, #000 140px); mask: radial-gradient(circle 140px at -73.08% -52.38%, transparent 139px, #000 140px); }
+  #transition .half::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.3), transparent 14%, transparent 86%, rgba(0,0,0,0.35)), repeating-linear-gradient(105deg, transparent 0 53px, rgba(255,255,255,0.07) 53px 54px, transparent 54px 97px), repeating-linear-gradient(90deg, transparent 0 41px, rgba(0,0,0,0.05) 41px 44px), radial-gradient(ellipse at 20% 30%, rgba(60,40,20,0.12), transparent 40%), radial-gradient(ellipse at 80% 75%, rgba(40,50,30,0.14), transparent 45%); }
+  #transition .half::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,0.45) 50%, transparent 62%); }
+  #transition.in .half::before { animation: tdSheen 1.3s ease-in-out 0.3s; }
+  @keyframes tdSheen { 0% { opacity: 1; transform: translateX(-100%); } 100% { opacity: 1; transform: translateX(100%); } }
+  #transition .bolt { width: 78px; height: 38px; top: calc(50% - 19px); background: repeating-linear-gradient(90deg, rgba(0,0,0,0.28) 0 2px, transparent 2px 8px), linear-gradient(180deg, #f2f6fa, #99a2ad 40%, #4a5059 85%, #2b3036); }
+  #transition .bolt::after { content: ''; position: absolute; top: -5px; bottom: -5px; width: 12px; background: linear-gradient(90deg, #cfd6de, #6d7681 60%, #3a4047); border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  #transition .bolt.l::after { right: 0; }
+  #transition .bolt.r::after { left: 0; }
+  #transition.open .tbg { background: radial-gradient(ellipse at 50% 50%, #ffffff 0, #bfe6ff 28%, #1a2c46 75%); }
+  #transition .bolt { height: 30px; top: calc(50% - 15px); border-radius: 0; background: repeating-linear-gradient(90deg, transparent 0 58px, rgba(0,0,0,0.5) 58px 60px, rgba(255,255,255,0.4) 60px 61px, transparent 61px 120px), linear-gradient(180deg, #ffffff 0, #e1e7ed 10%, #a9b2bd 32%, #6b7580 60%, #3b424a 85%, #1e2227 100%); box-shadow: 0 7px 9px rgba(0,0,0,0.55), 0 -1px 2px rgba(255,255,255,0.4); }
+  #transition .bolt::before { content: ''; position: absolute; left: 0; right: 0; top: -11px; height: 52px; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 28px, #2e343b 28px 30px, #8b949f 30px 32px, #c3cbd4 32px 48px, #8b949f 48px 50px, #2e343b 50px 52px, transparent 52px 120px); -webkit-mask: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%); mask: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%); }
+  #transition .bolt::after { top: -9px; bottom: -9px; width: 26px; border-radius: 5px; background: linear-gradient(180deg, #f4f7fa, #9aa3ae 40%, #4a5159 80%, #2a2f35); border: 1px solid rgba(20,24,30,0.8); box-shadow: 0 4px 7px rgba(0,0,0,0.6), inset 0 0 0 3px rgba(255,255,255,0.12); }
+  #transition .slot { position: absolute; z-index: 1; height: 21px; width: calc(50% - 110px); background: linear-gradient(180deg, #232930 0, #3f4852 45%, #5a6571 100%); background-size: 100% 42px; box-shadow: inset 0 5px 7px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.35); }
+  #transition .slot.l { left: 0; border-radius: 0 3px 3px 0; }
+  #transition .slot.r { left: calc(50% + 110px); border-radius: 3px 0 0 3px; }
+  #transition .slot.t { top: calc(50% - 21px); border-top: 1px solid rgba(0,0,0,0.6); }
+  #transition .slot.b { top: 50%; background-position: 0 -21px; border-bottom: 1px solid rgba(255,255,255,0.55); box-shadow: inset 0 -1px 2px rgba(255,255,255,0.35); }
+  #transition .bolt { height: 26px; top: calc(50% - 13px); box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5); }
+  #transition .bolt::before { top: -8px; height: 42px; }
+  #transition .bolt::after { top: -8px; bottom: -8px; box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 0 0 3px rgba(255,255,255,0.12); }
+  #transition .bolt::after { display: none; }
+  #transition .bolt.l { border-radius: 0 13px 13px 0; }
+  #transition .bolt.r { border-radius: 13px 0 0 13px; }
+  #transition .bolt.l, #transition .bolt.r { border-radius: 1px; }
+  #transition .bolt { background: repeating-linear-gradient(72deg, rgba(0,0,0,0.3) 0 1.4px, rgba(255,255,255,0.3) 1.4px 2.8px, transparent 2.8px 5.6px), repeating-linear-gradient(90deg, transparent 0 58px, rgba(0,0,0,0.55) 58px 60px, rgba(255,255,255,0.45) 60px 61px, transparent 61px 120px), linear-gradient(180deg, #ffffff 0, #e1e7ed 10%, #a9b2bd 32%, #6b7580 60%, #3b424a 85%, #1e2227 100%); }
+</style>
+</head>
+<body>
+<canvas id="outer" style="position:fixed;left:-3%;top:-3%;width:106%;height:106%;z-index:-1;display:none;filter:blur(4px)"></canvas>
+  <div id="fps">-- FPS</div>
+  <div id="bar"><button id="pause" aria-label="暫停"><span></span><span></span></button><div id="ui">0.00 秒</div><div id="best">最佳 --</div></div>
+  <canvas id="game"></canvas>
+  <div id="hint">在畫面上滑動，滑一下走一格（電腦可用方向鍵）</div>
+  <div id="gameover">
+    <h1 style="font-size: 36px; margin-bottom: 10px;">OOPS!</h1>
+    <p id="final-score" style="font-size: 20px;"></p>
+    <button id="restart">再玩一次</button>
+    <button id="go-levels">選擇關卡</button>
+    <button id="home">回主頁</button>
+  </div>
+
+<div id="menu" class="screen">
+    <h1 class="title"><span class="g"><svg class="lt gy" viewBox="0 0 679 205" style="width:272px;height:82px"><defs><path id="f1" fill-rule="evenodd" d="M668 11L572 11L561 34L563 45L552 53L540 82L542 88L552 88L555 95L552 98L536 98L533 100L515 139L513 150L607 149L615 133L616 126L611 124L562 124L559 121L562 106L568 94L572 91L628 90L632 87L639 69L636 66L588 65L585 62L586 50L578 45L578 40L585 35L647 36L664 21L669 13ZM553 11L531 13L527 11L475 10L435 38L420 73L426 77L437 76L440 83L436 87L416 87L413 89L399 119L398 126L407 146L411 150L456 150L461 154L459 166L451 182L452 187L491 158L528 75L526 71L479 72L460 90L461 94L480 94L483 97L482 106L475 120L471 124L441 124L436 118L436 108L449 81L450 73L464 48L482 36L543 36L553 18ZM410 13L406 10L327 11L317 31L319 36L374 36L382 45L381 55L364 93L356 106L331 123L314 124L311 121L311 115L336 60L337 52L309 51L294 80L265 148L267 150L336 150L382 120L420 40L420 32ZM287 11L224 10L189 33L148 124L160 150L221 150L260 123L299 39L298 32ZM254 36L259 44L259 54L230 118L220 124L190 123L186 116L188 104L217 43L227 36ZM162 14L157 10L83 10L78 12L70 28L69 35L128 36L133 43L132 56L111 101L80 124L64 124L61 121L62 112L87 61L89 52L60 52L21 132L16 148L27 150L84 150L132 119L140 107L171 40Z"/><mask id="mk1" maskUnits="userSpaceOnUse" x="0" y="0" width="679" height="205"><use href="#f1" fill="#fff" fill-rule="evenodd"/></mask></defs><use href="#f1" x="7" y="7" fill="#ff003c"/><use class="gA" href="#f1" fill="#00f0ff" opacity="0"/><use class="gB" href="#f1" fill="#ff003c" opacity="0"/><use href="#f1" fill="#fcee0a"/><g mask="url(#mk1)"><path d="M302 104l22 1M337 108l-16 2M415 136l-21 -4M73 139l10 -13M638 160l8 6M116 28l1 -12M136 60l-24 1M295 143l1 6M332 118l-2 -5M648 164l18 9M216 58l-11 -12M501 82l18 -2M622 144l-26 -7M592 91l25 -1M62 113l14 -5M71 72l24 10M91 60l-21 -12M521 51l3 0M137 128l-19 7M90 84l-15 -5M631 138l-10 14M149 81l18 7M80 164l-15 -6M505 72l-11 -12M73 107l-13 5M251 89l24 1" fill="none" stroke="#7a6e00" stroke-opacity="0.45" stroke-width="1.6"/><path d="M334 114h24l12 12h25M511 110h25l12 12h26M421 120h24l12 12h49M497 91h28l12 12h23M50 122h25l12 12h41" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.6"/></g></svg></span><span class="g"><svg class="man" viewBox="-60 -33 78 76"><defs><radialGradient id="mg"><stop offset="0" stop-color="#f6f8fb"/><stop offset="0.8" stop-color="#e3e8ef"/><stop offset="1" stop-color="#bcc4d0"/></radialGradient></defs><circle cx="-22" cy="5" r="36" fill="url(#mg)" stroke="#fff" stroke-width="2.2"/><circle cx="-22" cy="5" r="33.3" fill="none" stroke="#111" stroke-width="0.8" opacity="0.55"/><g transform="translate(-22 7) scale(0.95)"><g class="mv" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 -1V8" stroke="#111" stroke-width="2.3"/><path class="aL" d="M0 1L-7 9" stroke="#111" stroke-width="2.3"/><path class="aR" d="M0 1L7 9" stroke="#111" stroke-width="2.3"/><path class="lL" d="M0 8L-5 18" stroke="#111" stroke-width="2.3"/><path class="lR" d="M0 8L5 18" stroke="#111" stroke-width="2.3"/><circle cx="0" cy="-12" r="11" fill="#fff" stroke="#111" stroke-width="2.3"/></g></g></svg><svg class="lt gc" viewBox="0 0 462 241" style="width:185px;height:96px"><defs><path id="f2" fill-rule="evenodd" d="M439 33L361 32L357 36L350 53L352 58L409 58L416 67L415 77L394 125L364 146L350 146L347 143L347 136L342 130L342 126L357 114L372 75L370 73L341 74L315 134L317 138L323 138L326 141L326 146L323 150L309 153L306 156L302 171L371 172L420 139L452 62L451 54ZM193 32L188 36L183 46L181 57L192 59L195 62L195 70L192 73L173 74L169 78L136 154L124 188L128 188L161 169L168 159L182 125L190 122L195 126L240 200L266 216L284 223L229 122L229 114L232 111L241 108L269 87L282 57L282 48L274 36L265 32ZM213 59L238 58L241 61L240 72L232 88L205 90L202 87L204 73ZM170 33L91 32L71 44L52 60L18 138L16 149L29 172L75 172L80 176L79 184L67 211L68 214L106 186L145 98L145 94L134 92L95 94L79 113L80 116L97 116L100 119L100 125L92 144L89 146L59 146L54 141L53 132L78 75L85 66L97 58L160 58L164 55L170 41ZM349 10L313 28L300 51L297 68L288 80L261 143L263 152L278 173L282 171L332 55L333 41L341 33L349 16Z"/><mask id="mk2" maskUnits="userSpaceOnUse" x="0" y="0" width="462" height="241"><use href="#f2" fill="#fff" fill-rule="evenodd"/></mask></defs><use href="#f2" x="7" y="7" fill="#ff003c"/><use class="gA" href="#f2" fill="#00f0ff" opacity="0"/><use class="gB" href="#f2" fill="#ff003c" opacity="0"/><use href="#f2" fill="#00f0ff"/><g mask="url(#mk2)"><path d="M415 51l-25 18M93 47l8 -3M386 67l24 -4M266 189l10 16M311 34l20 5M145 59l18 5M406 161l24 4M307 133l-13 17M146 163l24 7M75 170l9 -8M36 119l-24 16M227 117l-5 7M397 80l-7 5M140 130l2 -0M296 118l-21 18M164 102l-5 16M412 116l-5 -11M389 56l2 -3M153 89l-16 -13M239 165l8 -8M305 35l-5 12M399 107l18 2M234 128l26 10M213 153l7 -3M342 169l6 16M24 114l7 -3" fill="none" stroke="#005f68" stroke-opacity="0.45" stroke-width="1.6"/><path d="M83 124h29l12 12h28M43 157h27l12 12h24M98 71h37l12 12h25M116 52h29l12 12h26M137 129h39l12 12h45" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.6"/></g></svg></span></h1>
+    <p id="menu-best"></p>
+    <button id="btn-start">開始遊戲</button>
+  </div>
+
+<div id="levels" class="screen hidden">
+    <h2>選擇關卡</h2>
+    <div id="lvgrid">
+      <button id="lv-rock" class="lvcard"><canvas class="thumb" data-lv="rock" width="360" height="360"></canvas><span class="lvname">石頭關卡</span></button>
+      <button id="lv-laser" class="lvcard"><canvas class="thumb" data-lv="laser" width="360" height="360"></canvas><span class="lvname">激光關卡</span></button>
+      <button id="lv-missile" class="lvcard"><canvas class="thumb" data-lv="missile" width="360" height="360"></canvas><span class="lvname">飛彈關卡</span></button>
+      <button id="lv-balloon" class="lvcard"><canvas class="thumb" data-lv="balloon" width="360" height="360"></canvas><span class="lvname">水球關卡</span></button>
+    </div>
+    <button id="lv-back" class="back">返回</button>
+  </div>
+
+<div id="pausemenu" class="screen hidden">
+    <h2>暫停</h2>
+    <button id="btn-resume">繼續遊戲</button>
+    <div class="vol"><label>音樂</label><input id="vol-music" type="range" min="0" max="100"><span id="vm"></span></div>
+    <div class="vol"><label>音效</label><input id="vol-sfx" type="range" min="0" max="100"><span id="vs"></span></div>
+    <button id="btn-pause-home">回到主頁</button>
+  </div>
+
+<div id="transition"><div class="tbg"></div><div class="pillar"><div class="half top"><div class="face"></div><svg class="seam"><path d="M0 0"/></svg></div><div class="half bot"><div class="face"><svg class="orb" viewBox="0 0 100 100"><defs><linearGradient id="og1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef2f7"/><stop offset="0.4" stop-color="#9aa6b5"/><stop offset="0.75" stop-color="#58626f"/><stop offset="1" stop-color="#b9c4d1"/></linearGradient><radialGradient id="og3"><stop offset="0" stop-color="#a3adbb"/><stop offset="1" stop-color="#57626f"/></radialGradient><radialGradient id="og4"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#d5dde7"/><stop offset="1" stop-color="#7d8896"/></radialGradient></defs><circle cx="50" cy="50" r="49" fill="url(#og1)" stroke="#4a5563" stroke-width="1"/><circle cx="50" cy="50" r="47" fill="none" stroke="#fff" stroke-opacity="0.45" stroke-width="0.6"/><polygon points="93.77,68.64 90.65,70.44 87.53,68.64 87.53,65.04 90.65,63.24 93.77,65.04" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="90.65" cy="66.84" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="69.96,92.45 66.84,94.25 63.72,92.45 63.72,88.85 66.84,87.05 69.96,88.85" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="66.84" cy="90.65" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="36.28,92.45 33.16,94.25 30.04,92.45 30.04,88.85 33.16,87.05 36.28,88.85" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="33.16" cy="90.65" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="12.47,68.64 9.35,70.44 6.23,68.64 6.23,65.04 9.35,63.24 12.47,65.04" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="9.35" cy="66.84" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="12.47,34.96 9.35,36.76 6.23,34.96 6.23,31.36 9.35,29.56 12.47,31.36" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="9.35" cy="33.16" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="36.28,11.15 33.16,12.95 30.04,11.15 30.04,7.55 33.16,5.75 36.28,7.55" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="33.16" cy="9.35" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="69.96,11.15 66.84,12.95 63.72,11.15 63.72,7.55 66.84,5.75 69.96,7.55" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="66.84" cy="9.35" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><polygon points="93.77,34.96 90.65,36.76 87.53,34.96 87.53,31.36 90.65,29.56 93.77,31.36" fill="#4a5461" stroke="#161b22" stroke-width="0.9" stroke-linejoin="round"/><circle cx="90.65" cy="33.16" r="1.9" fill="#232a33" stroke="#8e99a8" stroke-width="0.5"/><circle cx="50" cy="50" r="38" fill="url(#og3)" stroke="#c4cdd9" stroke-width="1.3"/><circle cx="50" cy="50" r="20" fill="#46515f" stroke="#6f86a6" stroke-width="1"/><circle cx="50" cy="50" r="29" fill="none" stroke="#2a323c" stroke-opacity="0.45" stroke-width="5.4" transform="translate(0.5 0.8)"/><path d="M50 50L50.00 79.00" stroke="#f7fafd" stroke-width="3.4" stroke-linecap="round"/><path d="M50 50L24.89 35.50" stroke="#f7fafd" stroke-width="3.4" stroke-linecap="round"/><path d="M50 50L75.11 35.50" stroke="#f7fafd" stroke-width="3.4" stroke-linecap="round"/><circle cx="50" cy="50" r="29" fill="none" stroke="#f7fafd" stroke-width="4.4"/><circle cx="50" cy="50" r="29" fill="none" stroke="#fff" stroke-width="1" opacity="0.9" transform="translate(-0.7 -0.7)"/><circle cx="50" cy="50" r="6.6" fill="url(#og1)" stroke="#4a5563" stroke-width="0.8"/><circle cx="50" cy="50" r="4.4" fill="#8993a1" stroke="#e8eef5" stroke-width="0.7"/><circle cx="50" cy="50" r="3.1" fill="url(#og4)"/></svg><div class="tt"></div></div><svg class="seam"><path d="M0 0"/></svg></div></div></div>
+<script>
+const N = 6;
+const canvas = document.getElementById('game');
+let ctx = canvas.getContext('2d');
+const ui = document.getElementById('ui');
+const gameoverScreen = document.getElementById('gameover');
+const finalScore = document.getElementById('final-score');
+
+// 方格外多留一圈邊界，用來顯示箭頭提示
+const avail = Math.min(window.innerWidth - 8, window.innerHeight - 120, 560);
+const cell = Math.max(36, Math.floor(avail / (N + 1.0)));
+const size = cell * N;
+const pad = Math.max(cell * 0.5, Math.floor(Math.min(window.innerWidth - size, window.innerHeight - 120 - size) / 2));
+canvas.width = size + 2 * pad;
+canvas.height = size + 2 * pad;
+document.getElementById('bar').style.width = canvas.width + 'px';
+const outer = document.getElementById('outer'), octx = outer.getContext('2d');
+let outerKey = '';
+function syncOuter() {
+  const show = !inMenu && canvas.offsetParent !== null;
+  outer.style.display = show ? 'block' : 'none';
+  if (!show) return;
+  const r = canvas.getBoundingClientRect(), W = innerWidth, H = innerHeight, key = level + '|' + Math.round(r.x) + '|' + Math.round(r.y) + '|' + W + '|' + H;
+  if (key === outerKey) return;
+  outerKey = key; outer.width = W * 1.06; outer.height = H * 1.06;
+  const B = level === 'laser' ? bgVault : level === 'missile' ? bgSea : level === 'balloon' ? bgPark : bg2, bw = r.width, bh = r.height, sh = Math.max(3, Math.round(pad * 0.12)), e = 24, o = [W * 0.03, H * 0.03];
+  const x0 = r.x + o[0], y0 = r.y + o[1], x1 = x0 + bw, y1 = y0 + bh, OW = outer.width, OH = outer.height;
+  if (level === 'laser') {
+    const wg = octx.createLinearGradient(0, 0, OW, OH); wg.addColorStop(0, '#46505e'); wg.addColorStop(0.5, '#363e4a'); wg.addColorStop(1, '#2a313b'); octx.fillStyle = wg; octx.fillRect(0, 0, OW, OH);
+    const ps = 118, ox = x0 % ps, oy = y0 % ps;
+    for (let gx = ox - ps; gx < OW; gx += ps) for (let gy = oy - ps; gy < OH; gy += ps) {
+      octx.fillStyle = 'rgba(255,255,255,0.07)'; octx.fillRect(gx + 2, gy + 2, ps - 4, 3); octx.fillRect(gx + 2, gy + 2, 3, ps - 4);
+      octx.fillStyle = 'rgba(0,0,0,0.35)'; octx.fillRect(gx + 2, gy + ps - 5, ps - 4, 3); octx.fillRect(gx + ps - 5, gy + 2, 3, ps - 4);
+      octx.strokeStyle = 'rgba(8,10,14,0.85)'; octx.lineWidth = 2; octx.strokeRect(gx, gy, ps, ps);
+      [[14, 14], [ps - 14, 14], [14, ps - 14], [ps - 14, ps - 14]].forEach(q => { octx.fillStyle = '#1b2028'; octx.beginPath(); octx.arc(gx + q[0], gy + q[1], 4.5, 0, Math.PI * 2); octx.fill(); octx.fillStyle = 'rgba(190,200,215,0.55)'; octx.beginPath(); octx.arc(gx + q[0] - 1, gy + q[1] - 1, 1.6, 0, Math.PI * 2); octx.fill(); });
+    }
+    for (let k = 0; k < 160; k++) { octx.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.06)'; octx.fillRect(Math.random() * OW, Math.random() * OH, 60 + Math.random() * 120, 1); }
+  } else {
+  octx.drawImage(B, 0, 0, bw, sh, x0, -2, bw, y0 + e + 2);
+  octx.drawImage(B, 0, bh - sh, bw, sh, x0, y1 - e, bw, OH - y1 + e + 2);
+  octx.drawImage(B, 0, 0, sh, bh, -2, y0, x0 + e + 2, bh);
+  octx.drawImage(B, bw - sh, 0, sh, bh, x1 - e, y0, OW - x1 + e + 2, bh);
+  octx.drawImage(B, 0, 0, sh, sh, -2, -2, x0 + e + 2, y0 + e + 2);
+  octx.drawImage(B, bw - sh, 0, sh, sh, x1 - e, -2, OW - x1 + e + 2, y0 + e + 2);
+  octx.drawImage(B, 0, bh - sh, sh, sh, -2, y1 - e, x0 + e + 2, OH - y1 + e + 2);
+  octx.drawImage(B, bw - sh, bh - sh, sh, sh, x1 - e, y1 - e, OW - x1 + e + 2, OH - y1 + e + 2);
+  }
+  octx.fillStyle = level === 'laser' ? 'rgba(8,10,14,0.22)' : 'rgba(8,10,14,0.4)'; octx.fillRect(0, 0, OW, OH);
+}
+setInterval(syncOuter, 150);
+
+let player, hazards, particles, startTime, isGameOver, spawnTimer, shakeTime;
+let craters = [];
+
+function init() {
+  player = { c: 2, r: 2, px: 2.5 * cell, py: 2.5 * cell, walk: 0 };
+  hazards = [];
+  craters = [];
+  particles = [];
+  startTime = Date.now();
+  isGameOver = false;
+  spawnTimer = 0;
+  shakeTime = 0;
+  gameoverScreen.style.display = 'none';
+  ui.innerText = '0.00 秒';
+}
+
+// 點擊螢幕：火柴人像拍照一樣定格擺 pose（迪斯可指天、秀肌肉、金雞獨立），隨機挑一個，不會連續重複
+let lastPose = -1;
+function doPose() {
+  let t; do { t = Math.floor(Math.random() * 3); } while (t === lastPose);
+  lastPose = t;
+  player.pose = { type: t, t0: performance.now(), dur: 1300 };
+}
+
+function move(dc, dr) {
+  if (isGameOver || inMenu || paused || transitioning) return;
+  const nc = Math.max(0, Math.min(N - 1, player.c + dc));
+  const nr = Math.max(0, Math.min(N - 1, player.r + dr));
+  if (nc !== player.c || nr !== player.r) {
+    player.c = nc; player.r = nr;
+    player.walk += 2;
+    player.step = { dc, dr, t0: performance.now() };
+    player.pose = null; // 走動時取消 pose
+    sfxMove();
+  }
+}
+
+// 滑動操作：滑一下 = 走一格
+const SWIPE_MIN = 20;
+let start = null;
+window.addEventListener('pointerdown', e => { start = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+window.addEventListener('pointermove', e => {
+  if (!start) return;
+  const dx = e.clientX - start.x, dy = e.clientY - start.y;
+  if (Math.hypot(dx, dy) < SWIPE_MIN) return;
+  if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1, 0);
+  else move(0, dy > 0 ? 1 : -1);
+  start = null; // 這一滑只算一格，需放開再滑
+});
+window.addEventListener('pointerup', e => {
+  // 點一下（沒有滑動、按得很短、不是按在按鈕上）= 擺 pose
+  if (start && !inMenu && !paused && !isGameOver && !transitioning && !(e.target.closest && e.target.closest('button')) && Date.now() - start.t < 500) doPose();
+  start = null;
+});
+window.addEventListener('pointercancel', () => { start = null; });
+window.addEventListener('keydown', e => {
+  const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (k) { e.preventDefault(); move(k[0], k[1]); }
+});
+document.getElementById('restart').addEventListener('click', init);
+
+// 生成陷阱：整列或整行先閃紅色警告，再射出子彈
+function spawnHazard(horizontal, idx) {
+  const dir = Math.random() < 0.5 ? 1 : -1;
+  if (level === 'laser') { hazards.push({ laser: true, horizontal, idx, dir, warn: 60, phase: 'warn', t: 0 }); return; }
+  const t = (Date.now() - startTime) / 1000;
+  const v = cell * 0.05 * dir; // 3 格/秒（以 60 幀/秒換算） // 滾動速度固定
+  hazards.push({
+    horizontal, idx, v,
+    x: horizontal ? (dir > 0 ? -cell : size + cell) : (idx + 0.5) * cell,
+    y: horizontal ? (idx + 0.5) * cell : (dir > 0 ? -cell : size + cell),
+    warn: 60, r: cell * 0.4, dir, roll: 0, z: ZDROP, vz: 0, sm: 1, entered: false, landed: false, air: false,
+    spots: Array.from({ length: 15 }, () => ({ phi: Math.random() * Math.PI * 2, lat: (Math.random() - 0.5) * 1.7, size: 0.08 + Math.random() * 0.16 })),
+    specks: Array.from({ length: 40 }, () => ({ phi: Math.random() * Math.PI * 2, lat: (Math.random() - 0.5) * 1.8, size: 0.025 + Math.random() * 0.045, light: Math.random() < 0.45 })),
+    cracks: Array.from({ length: 6 }, () => ({ phi: Math.random() * Math.PI * 2, lat: (Math.random() - 0.5) * 1.4, dphi: (Math.random() - 0.5) * 0.9, dlat: (Math.random() - 0.5) * 0.7 })),
+    shape: Array.from({ length: 9 }, () => 0.9 + Math.random() * 0.16)
+  });
+}
+
+// 每一波同時出現多顆石頭，時間越久數量越多（最多 5 顆）
+// 每波之間的間隔（幀數）隨時間縮短：從 70 幀降到 30 幀，比一波的滾動時間短，所以方格內會同時有好幾波
+const WAVE_PTS = [[0, 115], [10, 113], [20, 105], [30, 93], [40, 80], [50, 55], [60, 30]];
+const waveInterval = elapsed => { if (elapsed >= 60) return 30; let k = 1; while (WAVE_PTS[k][0] < elapsed) k++; const a = WAVE_PTS[k - 1], b = WAVE_PTS[k]; return Math.round(a[1] + (b[1] - a[1]) * (elapsed - a[0]) / (b[0] - a[0])); };
+function spawnWave(elapsed) {
+  if (level === 'missile') { spawnMissiles(elapsed); return; }
+  if (level === 'balloon') { spawnBalloons(elapsed); return; }
+  const count = Math.min(8, 2 + Math.floor(elapsed / 10));
+  // 場上已有的石頭也算進去：不重複同一條線，橫向、直向各最多 4 條，確保永遠有安全格
+  const used = new Set();
+  let rows = 0, cols = 0, tries = 0, spawned = 0;
+  hazards.forEach(h => {
+    if (h.laser ? h.phase === 'fire' : h.warn <= 0) return; // 已經射出的石頭不佔用線，下一波不用等它滾完（激光則是蓄力完成、開始發射後才釋出）
+    const key = (h.horizontal ? 'h' : 'v') + h.idx;
+    if (used.has(key)) return;
+    used.add(key);
+    if (h.horizontal) rows++; else cols++;
+  });
+  while (spawned < count && tries++ < 50) {
+    const horizontal = Math.random() < 0.5;
+    if (horizontal ? rows >= 4 : cols >= 4) continue; // 每種方向最多 4 條，確保永遠有安全格
+    const idx = Math.floor(Math.random() * N);
+    const key = (horizontal ? 'h' : 'v') + idx;
+    if (used.has(key)) continue;
+    used.add(key);
+    if (horizontal) rows++; else cols++;
+    spawnHazard(horizontal, idx);
+    spawned++;
+  }
+}
+
+function createExplosion(x, y) {
+  for (let i = 0; i < 25; i++) {
+    const a = Math.random() * Math.PI * 2, s = Math.random() * 8 + 2;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, size: Math.random() * 6 + 2, life: 1 });
+  }
+}
+
+// 咖啡色泥土地背景（只畫一次，之後重複貼上）
+const bg = document.createElement('canvas');
+bg.width = canvas.width;
+bg.height = canvas.height;
+(function () {
+  const b = bg.getContext('2d');
+  b.fillStyle = '#a98259';
+  b.fillRect(0, 0, bg.width, bg.height);
+  for (let i = 0; i < 900; i++) {
+    const x = Math.random() * bg.width, y = Math.random() * bg.height, s = Math.random() * 4 + 1;
+    b.fillStyle = Math.random() < 0.5 ? 'rgba(50,28,12,0.25)' : 'rgba(190,140,90,0.18)';
+    b.beginPath(); b.ellipse(x, y, s * 1.4, s, Math.random() * 3, 0, Math.PI * 2); b.fill();
+  }
+  for (let i = 0; i < 45; i++) {
+    const x = Math.random() * bg.width, y = Math.random() * bg.height, s = Math.random() * 2.5 + 1.5;
+    b.fillStyle = 'rgba(120,100,85,0.55)';
+    b.beginPath(); b.arc(x, y, s, 0, Math.PI * 2); b.fill();
+    b.fillStyle = 'rgba(40,25,15,0.3)';
+    b.beginPath(); b.arc(x + 1, y + 1.2, s * 0.8, 0, Math.PI * 2); b.fill();
+  }
+})();
+
+// 草地 + 更逼真的泥土（只畫一次）
+// 最佳紀錄：每個關卡各一筆（存在瀏覽器裡，讀寫失敗時照樣可玩）
+const bests = { rock: 0, laser: 0, missile: 0, balloon: 0 };
+try {
+  bests.rock = parseFloat(localStorage.getItem('mrOopsBest')) || 0;
+  bests.laser = parseFloat(localStorage.getItem('mrOopsBestLaser')) || 0;
+  bests.missile = parseFloat(localStorage.getItem('mrOopsBestMissile')) || 0;
+  bests.balloon = parseFloat(localStorage.getItem('mrOopsBestBalloon')) || 0;
+} catch (e) {}
+let level = 'rock';
+const bestEl = document.getElementById('best');
+const fmtBest = v => v > 0 ? v.toFixed(2) + ' 秒' : '--';
+function showBest() {
+  document.getElementById('menu-best').innerText = (bests.rock > 0 || bests.laser > 0 || bests.missile > 0 || bests.balloon > 0)
+    ? '最佳紀錄\n石頭關卡　' + fmtBest(bests.rock) + '\n激光關卡　' + fmtBest(bests.laser) + '\n飛彈關卡　' + fmtBest(bests.missile) + '\n水球關卡　' + fmtBest(bests.balloon)
+    : '還沒有紀錄，來挑戰看看！';
+  bestEl.innerText = bests[level] > 0 ? '最佳 ' + bests[level].toFixed(2) + ' 秒' : '最佳 --';
+}
+showBest();
+// 最佳紀錄同步到帳號的私人資料庫（只有自己看得到），瀏覽器清掉資料或換裝置也不會不見
+let bestRef = null;
+(async () => {
+  try {
+    if (!window.claude) return;
+    const user = await claude.use('user');
+    const db = await claude.use('db');
+    const id = user ? await user.id() : null;
+    if (!db || !id) return;
+    bestRef = db.collection('data/users/' + id).doc('best');
+    const snap = await bestRef.get();
+    const remote = snap.exists ? snap.data() : {};
+    const rr = remote.value || 0, rl = remote.laser || 0, rm = remote.missile || 0, rbl = remote.balloon || 0;
+    let push = false;
+    if (rr > bests.rock) bests.rock = rr; else if (bests.rock > rr) push = true;
+    if (rl > bests.laser) bests.laser = rl; else if (bests.laser > rl) push = true;
+    if (rm > bests.missile) bests.missile = rm; else if (bests.missile > rm) push = true;
+    if (rbl > bests.balloon) bests.balloon = rbl; else if (bests.balloon > rbl) push = true;
+    showBest();
+    if (push) await bestRef.set({ value: bests.rock, laser: bests.laser, missile: bests.missile, balloon: bests.balloon });
+  } catch (e) {}
+})();
+function saveBestRemote() { if (bestRef) bestRef.set({ value: bests.rock, laser: bests.laser, missile: bests.missile, balloon: bests.balloon }).catch(() => {}); }
+let nextWave = 60;
+// ===== 低窪地形：方格內是比外圍草地低的盆地，邊緣是一道落差 =====
+const RIM = cell * 0.45;       // 落差邊緣的坡面寬度（很陡）
+const ZDROP = cell * 0.6;      // 落差高度（畫面上的像素）
+const GRAV = cell * 0.018;     // 下墜加速度（每幀）
+function terrainDepth(x, y) {  // x、y 為方格座標（0 ~ size）；方格外 = 0，盆地底部 = 1
+  const a = x, b = size - x, c = y, d = size - y;
+  if (a <= 0 || b <= 0 || c <= 0 || d <= 0) return 0;
+  const e = Math.pow(Math.pow(a, -4) + Math.pow(b, -4) + Math.pow(c, -4) + Math.pow(d, -4), -0.25); // 圓角
+  if (e >= RIM) return 1;
+  const t = e / RIM;
+  return t * t * (3 - 2 * t);
+}
+// 泥土地打光：光源在左上。坡面朝向光源較亮、背光較暗；上方與左側的邊緣會在盆地內投下陰影
+function applyTerrainShading(b) {
+  const x0 = Math.round(pad), y0 = Math.round(pad);
+  const img = b.getImageData(x0, y0, size, size), px = img.data;
+  const K2 = RIM * 0.9, SW = cell * 0.9;
+  for (let j = 0; j < size; j++) {
+    for (let i = 0; i < size; i++) {
+      const dep = terrainDepth(i, j);
+      const gx = (terrainDepth(i + 1, j) - terrainDepth(i - 1, j)) / 2;
+      const gy = (terrainDepth(i, j + 1) - terrainDepth(i, j - 1)) / 2;
+      const lit = -(gx + gy) * 0.5 * K2;
+      const sh = Math.max(0, 1 - i / SW, 1 - j / SW);
+      const f = Math.max(0.25, 1 + lit * 1.1) * (1 - 0.12 * dep) * (1 - 0.5 * sh);
+      const k = (j * size + i) * 4;
+      px[k] = Math.min(255, px[k] * f);
+      px[k + 1] = Math.min(255, px[k + 1] * f);
+      px[k + 2] = Math.min(255, px[k + 2] * f);
+    }
+  }
+  b.putImageData(img, x0, y0);
+}
+// 石頭靠自己的力量往前滾：滾到邊緣時水平速度完全不變，只是高度很快地落下一小段、著地時砸出聲音與塵土，
+// 然後直接繼續滾，不停頓。離開盆地時則沿著對側邊緣平順升回高地。
+function updateFall(h, dt) {
+  const u = h.horizontal ? h.x : h.y;
+  if (!h.entered) {
+    h.air = false;
+    if (h.dir > 0 ? u >= 0 : u <= size) { h.entered = true; h.vz = 0; } else return;
+  }
+  const over = h.dir > 0 ? u - size : -u; // 越過對側邊緣的距離
+  if (over > 0) { h.air = false; h.sm = 1; h.z = Math.min(ZDROP, (ZDROP * over) / (cell * 0.5)); return; }
+  if (!h.landed) {
+    h.air = true;
+    h.vz += GRAV * dt;
+    h.z -= h.vz * dt;
+    if (h.z <= 0) { h.z = 0; h.landed = true; h.air = false; sfxLand(1.1); landDust(h); }
+  } else {
+    h.air = false;
+    h.sm += (1 - h.sm) * Math.min(1, 0.2 * dt);
+  }
+}
+function landDust(h) {
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2, sp = Math.random() * 1.6 + 0.4;
+    particles.push({ x: h.x + Math.cos(a) * h.r * 0.6, y: h.y + Math.sin(a) * h.r * 0.6, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.3, size: Math.random() * 7 + 4, life: 0.9, dust: true });
+  }
+}
+
+const bg2 = document.createElement('canvas');
+bg2.width = canvas.width;
+bg2.height = canvas.height;
+(function () {
+  const b = bg2.getContext('2d');
+  const W = bg2.width, H = bg2.height;
+  const rnd = (a, c) => a + Math.random() * (c - a);
+  // 方格外：綠色草地
+  b.fillStyle = '#4f8a3a';
+  b.fillRect(0, 0, W, H);
+  for (let i = 0; i < 3500; i++) {
+    const x = rnd(0, W), y = rnd(0, H);
+    b.strokeStyle = Math.random() < 0.5 ? 'rgba(30,90,30,0.5)' : 'rgba(150,205,85,0.45)';
+    b.lineWidth = 1.2;
+    b.beginPath(); b.moveTo(x, y); b.lineTo(x + rnd(-2, 2), y - rnd(2, 8)); b.stroke();
+  }
+  // 方格內：泥土地
+  b.save();
+  b.beginPath(); b.rect(pad, pad, size, size); b.clip();
+  b.drawImage(bg, 0, 0);
+  for (let i = 0; i < 40; i++) {
+    const x = pad + rnd(0, size), y = pad + rnd(0, size), r = cell * rnd(0.6, 1.8);
+    const g = b.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, Math.random() < 0.5 ? 'rgba(40,22,10,0.28)' : 'rgba(205,155,100,0.2)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    b.fillStyle = g; b.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  for (let i = 0; i < 6000; i++) {
+    b.fillStyle = Math.random() < 0.5 ? 'rgba(30,15,5,0.35)' : 'rgba(225,175,125,0.25)';
+    b.fillRect(pad + rnd(0, size), pad + rnd(0, size), 1.5, 1.5);
+  }
+  for (let i = 0; i < 14; i++) {
+    let x = pad + rnd(0, size), y = pad + rnd(0, size);
+    b.strokeStyle = 'rgba(35,18,8,0.35)'; b.lineWidth = 1;
+    b.beginPath(); b.moveTo(x, y);
+    for (let k = 0; k < 4; k++) { x += rnd(-0.25, 0.25) * cell; y += rnd(-0.25, 0.25) * cell; b.lineTo(x, y); }
+    b.stroke();
+  }
+  applyTerrainShading(b);
+  b.restore();
+  // 泥土邊緣的草叢
+  for (let i = 0; i < 500; i++) {
+    const t = Math.random() * 4 * size, side = Math.floor(t / size), p = t % size;
+    let x, y, dx, dy;
+    if (side === 0) { x = pad + p; y = pad; dx = 0; dy = -1; }
+    else if (side === 1) { x = pad + size; y = pad + p; dx = 1; dy = 0; }
+    else if (side === 2) { x = pad + p; y = pad + size; dx = 0; dy = 1; }
+    else { x = pad; y = pad + p; dx = -1; dy = 0; }
+    const L = rnd(4, 11);
+    b.strokeStyle = Math.random() < 0.5 ? 'rgba(35,100,35,0.9)' : 'rgba(150,205,85,0.85)';
+    b.lineWidth = 1.5;
+    b.beginPath(); b.moveTo(x - dx * 2, y - dy * 2); b.lineTo(x + dx * L + rnd(-2.5, 2.5), y + dy * L + rnd(-2.5, 2.5)); b.stroke();
+  }
+})();
+
+// ===== 激光關卡背景：米白牆面 + 銀行金庫門大鎖（簡單線條），外圍黃黑警示框 =====
+const bgVault = document.createElement('canvas');
+bgVault.width = canvas.width;
+bgVault.height = canvas.height;
+(function () {
+  const b = bgVault.getContext('2d');
+  const W = bgVault.width, H = bgVault.height;
+  const rnd = (a, c) => a + Math.random() * (c - a);
+  // 外框：深色底 + 黃黑斜紋警示帶
+  b.fillStyle = '#12151a'; b.fillRect(0, 0, W, H);
+  b.save();
+  b.beginPath(); b.rect(pad * 0.18, pad * 0.18, W - pad * 0.36, H - pad * 0.36);
+  b.rect(pad * 0.82, pad * 0.82, W - pad * 1.64, H - pad * 1.64);
+  b.clip('evenodd');
+  b.fillStyle = '#e8b923'; b.fillRect(0, 0, W, H);
+  b.fillStyle = '#15181d';
+  const sw = pad * 0.32;
+  for (let k = -H; k < W + H; k += sw * 2) {
+    b.beginPath(); b.moveTo(k, 0); b.lineTo(k + sw, 0); b.lineTo(k + sw + H, H); b.lineTo(k + H, H); b.closePath(); b.fill();
+  }
+  b.restore();
+  b.strokeStyle = '#000'; b.lineWidth = 2;
+  b.strokeRect(pad * 0.18, pad * 0.18, W - pad * 0.36, H - pad * 0.36);
+  b.strokeRect(pad * 0.82, pad * 0.82, W - pad * 1.64, H - pad * 1.64);
+  // 方格內：米白牆面 + 銀行金庫門的大鎖，用簡單線條畫出最有辨識度的部分（圓形門、鎖栓、六輻轉輪把手、中央密碼盤）
+  b.save();
+  b.beginPath(); b.rect(pad, pad, size, size); b.clip();
+  const bgw = b.createLinearGradient(pad, pad, pad + size, pad + size);
+  bgw.addColorStop(0, '#eceeeb'); bgw.addColorStop(1, '#d3d6d5');
+  b.fillStyle = bgw; b.fillRect(pad, pad, size, size);
+  // 凹槽：一道暗線配一道亮線，看起來像壓進牆面
+  const groove = path => {
+    b.save(); b.lineJoin = 'round'; b.lineCap = 'round'; b.lineWidth = 2;
+    b.translate(1.3, 1.3); b.strokeStyle = 'rgba(255,255,255,0.9)'; path(); b.stroke();
+    b.translate(-1.3, -1.3); b.strokeStyle = 'rgba(70,78,84,0.7)'; path(); b.stroke();
+    b.restore();
+  };
+  const cx = pad + size / 2, cy = pad + size / 2;
+  const at = (a, r) => [cx + Math.cos(a) * r * cell, cy + Math.sin(a) * r * cell];
+  const ring = r => groove(() => { b.beginPath(); b.arc(cx, cy, r * cell, 0, Math.PI * 2); });
+  // 圓形金庫門 + 一圈 8 根鎖栓
+  ring(2.85);
+  groove(() => {
+    b.beginPath();
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4 + Math.PI / 8, w = 0.1;
+      const p1 = at(a - w, 2.85), p2 = at(a - w, 2.45), p3 = at(a + w, 2.45), p4 = at(a + w, 2.85);
+      b.moveTo(p1[0], p1[1]); b.lineTo(p2[0], p2[1]); b.lineTo(p3[0], p3[1]); b.lineTo(p4[0], p4[1]);
+    }
+  });
+  // 六輻轉輪把手：輪圈 + 輻條一路伸出輪圈，末端有圓把
+  ring(1.45);
+  groove(() => {
+    b.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = -Math.PI / 2 + k * Math.PI / 3, p1 = at(a, 0.5), p2 = at(a, 1.95), q = at(a, 2.08);
+      b.moveTo(p1[0], p1[1]); b.lineTo(p2[0], p2[1]);
+      b.moveTo(q[0] + 0.13 * cell, q[1]); b.arc(q[0], q[1], 0.13 * cell, 0, Math.PI * 2);
+    }
+  });
+  // 中央密碼盤：圓 + 一條指針線
+  ring(0.5);
+  groove(() => { const p = at(-Math.PI / 2, 0.5); b.beginPath(); b.moveTo(cx, cy); b.lineTo(p[0], p[1]); });
+  b.restore();
+  b.strokeStyle = 'rgba(0,0,0,0.6)'; b.lineWidth = 6; b.strokeRect(pad, pad, size, size);
+  // 警示帶上的螺絲
+  for (let i = 0; i <= N; i++) {
+    const p = pad + i * cell;
+    for (const q of [pad * 0.5, W - pad * 0.5]) {
+      for (const [x, y] of [[p, q], [q, p]]) {
+        b.fillStyle = '#2a2f36'; b.beginPath(); b.arc(x, y, pad * 0.06, 0, Math.PI * 2); b.fill();
+        b.strokeStyle = '#000'; b.lineWidth = 1; b.stroke();
+      }
+    }
+  }
+})();
+
+const bgSea = document.createElement('canvas');
+bgSea.width = canvas.width;
+bgSea.height = canvas.height;
+(function () {
+  const b = bgSea.getContext('2d');
+  const W = bgSea.width, H = bgSea.height;
+  const rnd = (a, c) => a + Math.random() * (c - a);
+  const rr = (x, y, w, h, r) => { b.beginPath(); b.moveTo(x + r, y); b.arcTo(x + w, y, x + w, y + h, r); b.arcTo(x + w, y + h, x, y + h, r); b.arcTo(x, y + h, x, y, r); b.arcTo(x, y, x + w, y, r); b.closePath(); };
+  const sg = b.createLinearGradient(0, 0, 0, H);
+  sg.addColorStop(0, '#2a9bbd'); sg.addColorStop(0.5, '#167a9e'); sg.addColorStop(1, '#0c5273');
+  b.fillStyle = sg; b.fillRect(0, 0, W, H);
+  for (let k = 0; k < 16; k++) {
+    const x = rnd(0, W), y = rnd(0, H), r = rnd(W * 0.12, W * 0.3);
+    const g = b.createRadialGradient(x, y, 0, x, y, r);
+    const c = k % 2 ? '255,255,255' : '0,40,70';
+    g.addColorStop(0, `rgba(${c},0.09)`); g.addColorStop(1, `rgba(${c},0)`);
+    b.fillStyle = g; b.fillRect(0, 0, W, H);
+  }
+  b.lineCap = 'round';
+  for (let k = 0; k < 220; k++) {
+    const x = rnd(-10, W), y = rnd(0, H), l = rnd(10, 34);
+    b.beginPath(); b.moveTo(x, y); b.quadraticCurveTo(x + l / 2, y - rnd(2, 5), x + l, y);
+    b.strokeStyle = k % 3 ? `rgba(255,255,255,${rnd(0.06, 0.22)})` : `rgba(0,40,70,${rnd(0.1, 0.2)})`;
+    b.lineWidth = rnd(1, 2); b.stroke();
+  }
+  const x0 = pad, y0 = pad;
+  for (let k = 0; k < 90; k++) {
+    const side = Math.floor(rnd(0, 4)), t = rnd(0, 1), o = rnd(2, 12);
+    const fx = side < 2 ? x0 + t * size : (side === 2 ? x0 - o : x0 + size + o);
+    const fy = side < 2 ? (side === 0 ? y0 - o : y0 + size + o) : y0 + t * size;
+    b.fillStyle = `rgba(235,250,255,${rnd(0.15, 0.4)})`; b.beginPath(); b.arc(fx, fy, rnd(1.5, 5), 0, Math.PI * 2); b.fill();
+  }
+  const mg = Math.max(6, cell * 0.14);
+  const px0 = x0 - mg, py0 = y0 - mg, pw = size + 2 * mg;
+  for (let i = 0; i <= 3; i++) { [[px0 + pw * i / 3, py0], [px0 + pw * i / 3, py0 + pw], [px0, py0 + pw * i / 3], [px0 + pw, py0 + pw * i / 3]].forEach(([qx, qy]) => {
+    const g = b.createLinearGradient(qx - mg, qy, qx + mg, qy); g.addColorStop(0, '#2c1b0c'); g.addColorStop(0.5, '#6a4a2a'); g.addColorStop(1, '#22140a');
+    b.fillStyle = g; b.beginPath(); b.arc(qx, qy, mg * 1.15, 0, Math.PI * 2); b.fill();
+    b.strokeStyle = 'rgba(235,250,255,0.5)'; b.lineWidth = 2; b.beginPath(); b.arc(qx, qy, mg * 1.3, 0, Math.PI * 2); b.stroke();
+    for (let k = 0; k < 4; k++) { b.fillStyle = 'rgba(200,205,190,0.55)'; b.beginPath(); b.arc(qx + rnd(-mg, mg), qy + rnd(-mg, mg), rnd(0.8, 1.8), 0, Math.PI * 2); b.fill(); }
+  }); }
+  b.save(); b.shadowColor = 'rgba(0,25,40,0.65)'; b.shadowBlur = 14; b.shadowOffsetY = 6; b.fillStyle = '#2a180a'; b.fillRect(px0, py0, pw, pw); b.restore();
+  const tones = ['#a07a4e', '#8c6a43', '#9a8060', '#7d6446', '#b08a5a', '#8a7458', '#6f5a40'];
+  const plank = (x, y, w, h, vert) => {
+    b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+    const L = vert ? w : h, T = vert ? h : w;
+    const g = vert ? b.createLinearGradient(x, 0, x + w, 0) : b.createLinearGradient(0, y, 0, y + h);
+    const c0 = tones[Math.floor(rnd(0, tones.length))];
+    g.addColorStop(0, c0); g.addColorStop(0.5, c0); g.addColorStop(1, '#3d2a16');
+    b.fillStyle = g; b.fillRect(x, y, w, h);
+    b.fillStyle = `rgba(170,170,165,${rnd(0.05, 0.28)})`; b.fillRect(x, y, w, h);
+    b.fillStyle = 'rgba(255,240,210,0.16)'; vert ? b.fillRect(x, y, w * 0.18, h) : b.fillRect(x, y, w, h * 0.18);
+    for (let q = 0; q < 8; q++) {
+      const t = rnd(0.1, 0.9) * L, s0 = rnd(0, T * 0.7), l = rnd(T * 0.15, T * 0.55);
+      b.beginPath();
+      if (vert) { b.moveTo(x + t, y + s0); b.quadraticCurveTo(x + t + rnd(-1, 1), y + s0 + l / 2, x + t, y + s0 + l); }
+      else { b.moveTo(x + s0, y + t); b.quadraticCurveTo(x + s0 + l / 2, y + t + rnd(-1, 1), x + s0 + l, y + t); }
+      b.strokeStyle = q % 3 ? `rgba(45,26,10,${rnd(0.2, 0.5)})` : `rgba(235,215,175,${rnd(0.1, 0.25)})`; b.lineWidth = rnd(0.4, 0.9); b.stroke();
+    }
+    if (Math.random() < 0.3) { let cx = x + rnd(0.2, 0.8) * w, cy = y + rnd(0.2, 0.8) * h; b.beginPath(); b.moveTo(cx, cy); for (let k = 0; k < 4; k++) { cx += vert ? rnd(-1.5, 1.5) : rnd(3, 8); cy += vert ? rnd(3, 8) : rnd(-1.5, 1.5); b.lineTo(cx, cy); } b.strokeStyle = 'rgba(20,10,4,0.75)'; b.lineWidth = 1; b.stroke(); }
+    if (Math.random() < 0.25) { const mx = x + rnd(0, w), my = y + rnd(0, h); const mgd = b.createRadialGradient(mx, my, 0, mx, my, rnd(5, 11)); mgd.addColorStop(0, 'rgba(78,108,52,0.45)'); mgd.addColorStop(1, 'rgba(78,108,52,0)'); b.fillStyle = mgd; b.fillRect(x, y, w, h); }
+    if (Math.random() < 0.3) { b.fillStyle = 'rgba(25,14,6,0.22)'; vert ? b.fillRect(x, y + rnd(0, h * 0.6), w, rnd(h * 0.1, h * 0.3)) : b.fillRect(x + rnd(0, w * 0.6), y, rnd(w * 0.1, w * 0.3), h); }
+    [vert ? [x + w / 2, y + 3.5] : [x + 3.5, y + h / 2], vert ? [x + w / 2, y + h - 3.5] : [x + w - 3.5, y + h / 2]].forEach(([nx, ny]) => {
+      b.fillStyle = 'rgba(130,62,22,0.35)'; b.fillRect(nx - 0.6, ny, 1.2, 4);
+      b.fillStyle = '#2b2622'; b.beginPath(); b.arc(nx, ny, 1.5, 0, Math.PI * 2); b.fill(); b.fillStyle = 'rgba(210,200,185,0.7)'; b.beginPath(); b.arc(nx - 0.4, ny - 0.4, 0.5, 0, Math.PI * 2); b.fill();
+    });
+    for (let q = 0; q < 3; q++) {
+      let cx = x + rnd(0, w), cy = y + rnd(0, h); b.beginPath(); b.moveTo(cx, cy);
+      for (let k = 0; k < 3; k++) { cx += vert ? rnd(-1, 1) : rnd(2, 5); cy += vert ? rnd(2, 5) : rnd(-1, 1); b.lineTo(cx, cy); }
+      b.strokeStyle = 'rgba(25,12,5,0.55)'; b.lineWidth = 0.6; b.stroke();
+    }
+    if (Math.random() < 0.55) { const sx = vert ? x + rnd(0.2, 0.8) * w : x + rnd(0, w * 0.3), sy = vert ? y + rnd(0, h * 0.3) : y + rnd(0.25, 0.75) * h, len = (vert ? h : w) * rnd(0.35, 0.9); b.beginPath(); b.moveTo(sx, sy); for (let t = 0; t < len; t += 4) { const jx = vert ? sx + rnd(-0.8, 0.8) : sx + t, jy = vert ? sy + t : sy + rnd(-0.8, 0.8); b.lineTo(jx, jy); } b.strokeStyle = 'rgba(15,7,2,0.8)'; b.lineWidth = 1.1; b.stroke(); b.strokeStyle = 'rgba(240,215,170,0.35)'; b.lineWidth = 0.6; b.translate(vert ? 1 : 0, vert ? 0 : 1); b.stroke(); b.translate(vert ? -1 : 0, vert ? 0 : -1); }
+    [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1]].forEach(([qx, qy, sx, sy]) => { if (Math.random() < 0.3) { const cs = rnd(2, 4.5); b.fillStyle = '#0d3f58'; b.beginPath(); b.moveTo(qx, qy); b.lineTo(qx + sx * cs, qy); b.lineTo(qx, qy + sy * cs * rnd(0.6, 1.2)); b.fill(); } });
+    b.fillStyle = 'rgba(255,240,210,0.35)'; vert ? b.fillRect(x, y, 1, h) : b.fillRect(x, y, w, 1);
+    b.fillStyle = 'rgba(0,0,0,0.38)'; vert ? b.fillRect(x + w - 1.6, y, 1.6, h) : b.fillRect(x, y + h - 1.6, w, 1.6);
+    b.restore();
+    b.strokeStyle = 'rgba(22,12,4,0.85)'; b.lineWidth = 1; b.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  };
+  const ph = cell / 3, rows = N * 3;
+  for (let i = 0; i < rows; i++) {
+    const y = y0 + i * ph, nj = Math.random() < 0.3 ? 2 : 1, js = [];
+    for (let k = 0; k < nj; k++) js.push(rnd(0.15 + k * 0.4, 0.45 + k * 0.4));
+    js.sort(); let xs = 0;
+    js.concat([1]).forEach(f => { const lift = Math.random() < 0.25 ? rnd(0.6, 1.4) : 0; if (lift) { b.fillStyle = 'rgba(0,0,0,0.4)'; b.fillRect(x0 + xs * size, y + ph - 0.4, (f - xs) * size, lift + 1.5); } plank(x0 + xs * size, y - lift, (f - xs) * size, ph - 0.4, false); xs = f; });
+  }
+  for (let q = 0; q < 4; q++) {
+    const hx = x0 + rnd(0.08, 0.92) * size, hy = y0 + rnd(0.08, 0.92) * size, hr = cell * rnd(0.07, 0.12);
+    b.beginPath(); for (let k = 0; k < 9; k++) { const an = k / 9 * Math.PI * 2, rr2 = hr * rnd(0.6, 1.3); b.lineTo(hx + Math.cos(an) * rr2 * 1.5, hy + Math.sin(an) * rr2); } b.closePath();
+    b.fillStyle = '#0b3a52'; b.fill(); b.strokeStyle = 'rgba(20,10,4,0.9)'; b.lineWidth = 1.5; b.stroke();
+    b.strokeStyle = 'rgba(220,190,140,0.55)'; b.lineWidth = 0.8; for (let k = 0; k < 6; k++) { const an = rnd(0, Math.PI * 2); b.beginPath(); b.moveTo(hx + Math.cos(an) * hr * 1.4, hy + Math.sin(an) * hr); b.lineTo(hx + Math.cos(an) * hr * 2.2, hy + Math.sin(an) * hr * 1.5); b.stroke(); }
+  }
+  const crack = (sx, sy, ang, len, wd) => {
+    const n = Math.ceil(len / 4), L = [], R = [], Cc = []; let cx = sx, cy = sy;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, a = ang + (Math.random() < 0.18 ? rnd(-0.9, 0.9) : rnd(-0.14, 0.14)), st = rnd(2.5, 6.5);
+      cx += Math.cos(a) * st; cy += Math.sin(a) * st;
+      const nx = -Math.sin(a), ny = Math.cos(a), hw = wd * 0.5 * Math.pow(Math.sin(Math.PI * Math.min(0.98, t + 0.01)), 0.6) + 0.25;
+      const l = hw * rnd(0.55, 1.5), r = hw * rnd(0.55, 1.5);
+      L.push([cx + nx * l, cy + ny * l, nx, ny]); R.push([cx - nx * r, cy - ny * r, -nx, -ny]); Cc.push([cx, cy]);
+    }
+    b.beginPath(); L.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); for (let i = R.length - 1; i >= 0; i--) b.lineTo(R[i][0], R[i][1]); b.closePath();
+    b.fillStyle = '#0a3a57'; b.fill(); b.lineJoin = 'miter'; b.strokeStyle = 'rgba(14,7,2,0.95)'; b.lineWidth = 1.8; b.stroke();
+    [L, R].forEach(E => { for (let i = 1; i < E.length - 1; i += 3) { const q = E[i], pq = E[i - 1], len2 = rnd(0.6, 1.5); b.fillStyle = Math.random() < 0.6 ? '#7a5030' : '#3a2412'; b.beginPath(); b.moveTo(pq[0], pq[1]); b.lineTo(q[0] + q[2] * -len2, q[1] + q[3] * -len2); b.lineTo(E[i + 1][0], E[i + 1][1]); b.fill(); }
+      b.beginPath(); E.forEach((q, i) => i ? b.lineTo(q[0] + q[2] * 1.3, q[1] + q[3] * 1.3) : b.moveTo(q[0] + q[2] * 1.3, q[1] + q[3] * 1.3)); b.strokeStyle = 'rgba(228,200,150,0.65)'; b.lineWidth = 0.9; b.stroke(); });
+    b.beginPath(); Cc.forEach((q, i) => i ? b.lineTo(q[0], q[1]) : b.moveTo(q[0], q[1])); b.strokeStyle = 'rgba(80,175,215,0.5)'; b.lineWidth = Math.max(0.6, wd * 0.25); b.stroke();
+  };
+  b.save(); b.beginPath(); b.rect(x0, y0, size, size); b.clip();
+  const reg = []; for (let tries = 0; reg.length < 3 && tries < 200; tries++) { const rx = Math.floor(rnd(0, 3)), ry = Math.floor(rnd(0, 3)); if (reg.every(g => Math.max(Math.abs(g[0] - rx), Math.abs(g[1] - ry)) >= 2 || (g[0] !== rx && g[1] !== ry && Math.abs(g[0] - rx) + Math.abs(g[1] - ry) >= 3))) reg.push([rx, ry]); }
+  reg.forEach(([rx, ry]) => { const across = Math.random() < 0.25; crack(x0 + (rx + rnd(0.2, 0.8)) / 3 * size, y0 + (ry + rnd(0.2, 0.8)) / 3 * size, across ? rnd(1.2, 1.9) : rnd(-0.2, 0.2) + (Math.random() < 0.5 ? 0 : Math.PI), cell * rnd(0.6, 1.2), rnd(4, 6)); });
+  b.restore();
+  const bm = (x, y, w, h, vert) => { plank(x, y, w, h, vert); };
+  bm(px0, py0, pw, mg, false); bm(px0, py0 + pw - mg, pw, mg, false); bm(px0, py0 + mg, mg, pw - 2 * mg, true); bm(px0 + pw - mg, py0 + mg, mg, pw - 2 * mg, true);
+  const vg = b.createRadialGradient(W / 2, H / 2, size * 0.35, W / 2, H / 2, size * 0.78); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,6,2,0.28)'); b.fillStyle = vg; b.fillRect(px0, py0, pw, pw);
+  b.strokeStyle = 'rgba(255,255,255,0.4)'; b.lineWidth = 1.5; b.strokeRect(px0 - 1, py0 - 1, pw + 2, pw + 2);
+})();
+
+const bgPark = document.createElement('canvas');
+bgPark.width = canvas.width;
+bgPark.height = canvas.height;
+(function () {
+  const b = bgPark.getContext('2d');
+  const W = bgPark.width, H = bgPark.height;
+  const rnd = (a, c) => a + Math.random() * (c - a);
+  const rr = (x, y, w, h, r) => { b.beginPath(); b.moveTo(x + r, y); b.arcTo(x + w, y, x + w, y + h, r); b.arcTo(x + w, y + h, x, y + h, r); b.arcTo(x, y + h, x, y, r); b.arcTo(x, y, x + w, y, r); b.closePath(); };
+  const wg = b.createLinearGradient(0, 0, 0, H);
+  wg.addColorStop(0, '#45d6ea'); wg.addColorStop(1, '#16a2cf');
+  b.fillStyle = wg; b.fillRect(0, 0, W, H);
+  b.lineCap = 'round';
+  for (let k = 0; k < 170; k++) {
+    const x = rnd(-10, W), y = rnd(0, H), l = rnd(10, 30);
+    b.beginPath(); b.moveTo(x, y); b.bezierCurveTo(x + l * 0.3, y - rnd(3, 7), x + l * 0.7, y + rnd(3, 7), x + l, y);
+    b.strokeStyle = `rgba(255,255,255,${rnd(0.1, 0.3)})`; b.lineWidth = rnd(1, 2.2); b.stroke();
+  }
+  const m = pad * 0.18, dx = pad - m, dw = size + 2 * m;
+  b.save(); b.shadowColor = 'rgba(0,70,110,0.45)'; b.shadowBlur = 12; b.shadowOffsetY = 4;
+  rr(dx, dx, dw, dw, 10); b.fillStyle = '#fff6e6'; b.fill();
+  b.restore();
+  rr(dx + 2, dx + 2, dw - 4, dw - 4, 8); b.strokeStyle = '#ffd166'; b.lineWidth = 3; b.stroke();
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const x = pad + c * cell, y = pad + r * cell;
+    b.fillStyle = (r + c) % 2 ? '#bff0f8' : '#e4fafd'; b.fillRect(x, y, cell, cell);
+    const tg = b.createLinearGradient(x, y, x + cell, y + cell); tg.addColorStop(0, 'rgba(255,255,255,0.45)'); tg.addColorStop(0.5, 'rgba(255,255,255,0)'); b.fillStyle = tg; b.fillRect(x, y, cell, cell);
+    b.strokeStyle = 'rgba(255,255,255,0.85)'; b.lineWidth = 2; b.beginPath(); b.moveTo(x + cell * 0.12, y + cell * 0.2); b.lineTo(x + cell * 0.3, y + cell * 0.12); b.stroke();
+  }
+  const ring = (x, y, r, c1) => {
+    b.lineWidth = r * 0.75; b.strokeStyle = c1; b.beginPath(); b.arc(x, y, r, 0, Math.PI * 2); b.stroke();
+    b.lineWidth = r * 0.75; b.strokeStyle = '#fff'; for (let q = 0; q < 4; q++) { b.beginPath(); b.arc(x, y, r, q * Math.PI / 2 + 0.15, q * Math.PI / 2 + 0.75); b.stroke(); }
+    b.lineWidth = 1.5; b.strokeStyle = 'rgba(255,255,255,0.8)'; b.beginPath(); b.arc(x, y, r * 1.18, Math.PI * 1.1, Math.PI * 1.6); b.stroke();
+  };
+  const rp = pad * 0.4, rrad = pad * 0.26;
+  ring(rp, rp, rrad, '#ff5a5f'); ring(W - rp, rp, rrad, '#ffd166'); ring(rp, H - rp, rrad, '#ffd166'); ring(W - rp, H - rp, rrad, '#ff5a5f');
+  const cols = ['#ff5a5f', '#ffffff', '#ffd166'];
+  for (let x = rp + rrad * 2.2, k = 0; x < W - rp - rrad * 2; x += 18, k++) for (const y of [rp, H - rp]) { b.fillStyle = cols[k % 3]; b.beginPath(); b.arc(x, y, 3.6, 0, Math.PI * 2); b.fill(); }
+  for (let y = rp + rrad * 2.2, k = 0; y < H - rp - rrad * 2; y += 18, k++) for (const x of [rp, W - rp]) { b.fillStyle = cols[k % 3]; b.beginPath(); b.arc(x, y, 3.6, 0, Math.PI * 2); b.fill(); }
+  for (let k = 0; k < 70; k++) {
+    const side = Math.floor(rnd(0, 4)), t = rnd(0, 1), o = rnd(1, 8);
+    const fx = side < 2 ? dx + t * dw : (side === 2 ? dx - o : dx + dw + o), fy = side < 2 ? (side === 0 ? dx - o : dx + dw + o) : dx + t * dw;
+    b.fillStyle = `rgba(255,255,255,${rnd(0.2, 0.5)})`; b.beginPath(); b.arc(fx, fy, rnd(1, 3), 0, Math.PI * 2); b.fill();
+  }
+})();
+
+function drawGrid() {
+  ctx.strokeStyle = level === 'missile' ? 'rgba(8,22,32,0.45)' : level === 'balloon' ? 'rgba(20,100,140,0.35)' : '#000';
+  ctx.lineWidth = level === 'missile' || level === 'balloon' ? 2 : 3;
+  ctx.setLineDash([]);
+  if (level === 'missile') {
+    ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(14,7,2,0.85)';
+    for (let i = 0; i <= N; i++) { ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, size); ctx.moveTo(0, i * cell); ctx.lineTo(size, i * cell); ctx.stroke(); }
+    ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(255,226,170,0.55)';
+    for (let i = 0; i <= N; i++) { ctx.beginPath(); ctx.moveTo(i * cell + 2, 0); ctx.lineTo(i * cell + 2, size); ctx.moveTo(0, i * cell + 2); ctx.lineTo(size, i * cell + 2); ctx.stroke(); }
+    return;
+  }
+  for (let i = 0; i <= N; i++) {
+    ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, size); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(size, i * cell); ctx.stroke();
+  }
+}
+
+function drawStickman(p, sq = 0) {
+  const s = cell / 75;
+  let swing = Math.sin(p.walk) * 4 * (1 - sq);
+  // pose 動作（被碾過時不播放）
+  let pose = -1, pt = 0, hop = 0;
+  if (p.pose && !sq) {
+    pt = (performance.now() - p.pose.t0) / p.pose.dur;
+    if (pt >= 1) p.pose = null; else { pose = p.pose.type; swing = 0; }
+  }
+  // 待機：沒在移動、沒在擺 pose 時，身體會左右快速閃躲（慢慢進入、慢慢退出，不會突然切換）
+  const nowMs = performance.now();
+  const idleNow = pose === -1 && !sq && !isGameOver && Math.abs(p.px - (p.c + 0.5) * cell) < 1.5 && Math.abs(p.py - (p.r + 0.5) * cell) < 1.5;
+  p.idleK = (p.idleK || 0) + ((idleNow ? 1 : 0) - (p.idleK || 0)) * 0.08;
+  const k = p.idleK;
+  swing *= 1 - 0.6 * k;
+  // 被碾過時整個身體一起壓扁：以腳底(y=18)為基準，高度縮短、寬度攤開，手腳往兩側張開
+  const sx = 1 + 0.6 * sq, sy = 1 - 0.68 * sq;
+  const arm = 7 + 9 * sq, leg = 5 + 8 * sq;
+  const X = x => x * sx, Y = y => 18 + (y - 18) * sy;
+  ctx.save();
+  ctx.translate(p.px, p.py + 2 * s);
+  ctx.scale(s * 1.6, s * 1.6);
+  // 被激光電到：全身抖動、黑白反轉閃爍（像 X 光），之後變成焦黑
+  const zt = p.zap ? (performance.now() - p.zap) / 1000 : -1;
+  const wt = p.wet ? (performance.now() - p.wet) / 1000 : -1;
+  if (wt >= 0 && wt < 1.5) ctx.translate((Math.random() - 0.5) * 1.4 * (1 - wt / 1.5), 0);
+  if (zt >= 0 && zt < 0.6) ctx.translate((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 1.2);
+  const flick = zt >= 0 && zt < 0.6 && Math.floor(zt * 18) % 2 === 0;
+  const bodyC = wt >= 0 ? '#12385a' : zt >= 0.6 ? '#2a2a2a' : flick ? '#fff' : '#111';
+  const headC = wt >= 0 ? '#dff3ff' : zt >= 0.6 ? '#707070' : flick ? '#111' : '#fff';
+  const outC = wt >= 0 ? '#12385a' : zt >= 0.6 ? '#1a1a1a' : flick ? '#fff' : '#111';
+  // 待機：像躲避球一樣左右快速閃躲（左、右交替，動作小而迅速，每次約 0.3 秒）
+  let aL = 0, aR = 0;
+  if (k > 0.01) {
+    const tb = nowMs / 300, d = Math.floor(tb) % 2 === 0 ? -1 : 1;
+    const e = Math.min(1, Math.sin((tb % 1) * Math.PI) * 1.7); // 很快閃到定位、稍停、再收回
+    const ix = d * 0.8 * e, lean = d * 0.035 * e;
+    if (d < 0) { aL = 0.1 * e; aR = -0.06 * e; } else { aL = -0.06 * e; aR = 0.1 * e; } // 手臂角度微調（長度不變）
+    aL *= k; aR *= k;
+    ctx.translate(ix * k, 0);
+    ctx.translate(0, 18); ctx.rotate(lean * k); ctx.translate(0, -18);
+  }
+  // 走動時的閃身步：這一步的方向 (sd 左右、sv 上下) 與進度 se（0→1→0）
+  let sd = 0, sv = 0, se = 0;
+  if (p.step && pose === -1 && !sq) { const u = (nowMs - p.step.t0) / 420; if (u >= 1) p.step = null; else { se = Math.sin(u * Math.PI) * (p.step.dr ? 0.6 : 1); sd = p.step.dc; sv = p.step.dr; } }
+  if (se > 0) { ctx.translate(0, 18); ctx.rotate(0.1 * sd * se); ctx.scale(1 + 0.05 * Math.abs(sv) * se, 1 - 0.1 * (sv > 0 ? 1 : 0) * se); ctx.translate(0, -18); ctx.translate(0, -3 * (sv < 0 ? 1 : 0) * se); }
+  if (pose === 0) { ctx.translate(0, 18); ctx.rotate(0.2); ctx.translate(0, -18); }    // 歪著身體耍帥
+  if (pose === 2) { ctx.translate(0, 18); ctx.rotate(-0.16); ctx.translate(0, -18); }
+  if (sq > 0) { // 地上的壓痕
+    ctx.fillStyle = `rgba(30,16,6,${0.3 * sq})`;
+    ctx.beginPath(); ctx.ellipse(0, 17, 20 * sq + 8, 5 * sq + 1, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const limbsPath = () => {
+  ctx.beginPath();
+  ctx.moveTo(X(0), Y(-1)); ctx.lineTo(X(0), Y(8));
+  let lx = -leg - swing, rx = leg + swing;
+  if (pose === -1) {
+    // 八字形：雙手從肩膀往兩側斜下垂放（走路時前後擺動）
+    const aLen = Math.hypot(arm, 8), aTh = Math.atan2(arm, 8); // 兩隻手臂永遠一樣長，只轉角度
+    let thL = aTh - swing * 0.09 + aL, thR = aTh + swing * 0.09 + aR;
+    if (se > 0) { thL += ((sd > 0 ? -1.45 : sd < 0 ? 0.25 : sv < 0 ? 2.1 : thL) - thL) * se; thR += ((sd < 0 ? -1.45 : sd > 0 ? 0.25 : sv > 0 ? 2.1 : thR) - thR) * se; }
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(-aLen * Math.sin(thL)), Y(1 + aLen * Math.cos(thL)));
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(aLen * Math.sin(thR)), Y(1 + aLen * Math.cos(thR)));
+  } else if (pose === 0) { // 迪斯可：一手斜指天空，另一手斜指地面
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(14), Y(-19));
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(-10), Y(12));
+  } else if (pose === 1) { // 秀肌肉：雙手彎起握拳
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(-14.5), Y(1)); ctx.lineTo(X(-14.5), Y(-9));
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(14.5), Y(1)); ctx.lineTo(X(14.5), Y(-9));
+  } else { // 金雞獨立：雙手平舉像飛機
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(-15), Y(-3));
+    ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(15), Y(-3));
+  }
+  if (pose === 0) { // 迪斯可：雙腳張開，一腳膝蓋彎起
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(-5), Y(13)); ctx.lineTo(X(-8), Y(18));
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(6), Y(12)); ctx.lineTo(X(6), Y(18));
+  } else if (pose === 1) { // 馬步
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(-7), Y(12)); ctx.lineTo(X(-8), Y(18));
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(7), Y(12)); ctx.lineTo(X(8), Y(18));
+  } else if (pose === 2) { // 金雞獨立：膝蓋抬高
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(-2), Y(18));
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(8), Y(6)); ctx.lineTo(X(6), Y(13));
+  } else {
+    let lK = [lx * 0.4, 12], lF = [lx, 18], rK = [rx * 0.4, 12], rF = [rx, 18];
+    if (sd > 0) { rK = [rx * 0.4 + 7 * se, 12]; rF = [rx + 9 * se, 18]; }
+    if (sd < 0) { lK = [lx * 0.4 - 7 * se, 12]; lF = [lx - 9 * se, 18]; }
+    if (sv < 0) { rK = [rx * 0.4 + (9 - rx * 0.4) * se, 12 - 6 * se]; rF = [rx + (6 - rx) * se, 18 - 5 * se]; }
+    if (sv > 0) { lK = [lx * 0.4 - 8 * se, 12]; lF = [lx - 11 * se, 18]; }
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(lK[0]), Y(lK[1])); ctx.lineTo(X(lF[0]), Y(lF[1]));
+    ctx.moveTo(X(0), Y(8)); ctx.lineTo(X(rK[0]), Y(rK[1])); ctx.lineTo(X(rF[0]), Y(rF[1]));
+  }
+  };
+  const headPath = () => { ctx.beginPath(); ctx.ellipse(X(0), Y(-12), 11 * sx, 11 * sy, 0, 0, Math.PI * 2); };
+
+  // 腳下的陰影：只在腳底正下方
+  const gs = ctx.createRadialGradient(0, 18.5, 1, 0, 18.5, 10);
+  gs.addColorStop(0, 'rgba(15,6,0,0.42)'); gs.addColorStop(1, 'rgba(15,6,0,0)');
+  ctx.fillStyle = gs;
+  ctx.beginPath(); ctx.ellipse(0, 18.5, 10 * sx, 3.2 * sy + 0.8, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 身體：黑色細線條；頭：純白填滿、黑色描邊
+  if (wt >= 0) {
+    const pr = 8 + Math.min(1, wt / 1.2) * 12;
+    ctx.fillStyle = 'rgba(120,200,255,0.5)'; ctx.beginPath(); ctx.ellipse(0, 18.5, pr * sx, pr * 0.3 * sy + 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.ellipse(0, 18.5, pr * sx, pr * 0.3 * sy + 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+    limbsPath(); ctx.strokeStyle = 'rgba(110,200,255,0.55)'; ctx.lineWidth = 4.8; ctx.stroke();
+  }
+  limbsPath(); ctx.strokeStyle = bodyC; ctx.lineWidth = 2.2; ctx.stroke();
+  headPath(); ctx.fillStyle = headC; ctx.fill();
+  ctx.lineWidth = 2.2; ctx.strokeStyle = outC; ctx.stroke();
+  if (wt >= 0) {
+    limbsPath(); ctx.save(); ctx.translate(-0.5, -0.5); ctx.strokeStyle = 'rgba(235,250,255,0.8)'; ctx.lineWidth = 0.8; ctx.stroke(); ctx.restore();
+    ctx.save(); headPath(); ctx.clip(); ctx.strokeStyle = 'rgba(90,170,230,0.75)'; ctx.lineWidth = 1.2;
+    [-6, -1.5, 3.5, 7].forEach((hx, q) => { ctx.beginPath(); ctx.moveTo(X(hx), Y(-24)); ctx.lineTo(X(hx + (q % 2 ? 1 : -1)), Y(-4)); ctx.stroke(); });
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.ellipse(X(-4), Y(-17), 3 * sx, 2 * sy, -0.5, 0, Math.PI * 2); ctx.fill();
+    [[-7, 9], [7, 9], [0, -1], [-10, -6], [10, -6], [-3, 8], [4, 12]].forEach((a, q) => {
+      const u = (wt * 1.4 + q * 0.37) % 1;
+      ctx.fillStyle = `rgba(140,215,255,${0.95 * (1 - u)})`; ctx.beginPath(); ctx.ellipse(X(a[0]), Y(a[1] + u * 9), 1.4 * (1 - u * 0.4), 2 * (1 - u * 0.3), 0, 0, Math.PI * 2); ctx.fill();
+    });
+    if (wt < 0.35) { const a = 1 - wt / 0.35; ctx.fillStyle = `rgba(140,215,255,${0.5 * a})`; ctx.beginPath(); ctx.ellipse(0, 2, 16 + 10 * (1 - a), 24, 0, 0, Math.PI * 2); ctx.fill(); }
+  }
+  if (pose >= 0) drawPoseExtras(pose, X, Y);
+  ctx.restore();
+}
+// pose 專用的道具：秀肌肉時雙手握拳
+function drawPoseExtras(pose, X, Y) {
+  if (pose !== 1) return;
+  ctx.fillStyle = '#111';
+  for (const sx of [-14.5, 14.5]) { ctx.beginPath(); ctx.arc(X(sx), Y(-9), 2.2, 0, Math.PI * 2); ctx.fill(); }
+}
+// 被石頭撞到後，人物隨著石頭滾過去的位置被壓扁
+function updateSquash() {
+  const h = player.hit;
+  if (!isGameOver || !h) return;
+  const along = (h.horizontal ? h.x - player.px : h.y - player.py) * h.dir; // 負 = 石頭還沒到，正 = 已經滾過
+  const t = Math.min(1, Math.max(0, (along + h.r * 0.9) / (h.r * 1.2)));
+  player.sq = Math.max(player.sq || 0, t);
+  if (!player.puffed && player.sq > 0.5) {
+    player.puffed = true;
+    for (let i = 0; i < 14; i++) {
+      const a = Math.random() * Math.PI * 2, sp = Math.random() * 1.8 + 0.4;
+      particles.push({ x: player.px + Math.cos(a) * cell * 0.15, y: player.py + cell * 0.2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.5 - 0.2, size: Math.random() * 6 + 3, life: 0.9, dust: true });
+    }
+  }
+}
+
+// 方格外的箭頭提示：出現在石頭進場的那一側
+function arrowPos(h) {
+  let ax, ay, ang;
+  if (h.horizontal) {
+    ax = h.dir > 0 ? -pad / 2 : size + pad / 2;
+    ay = (h.idx + 0.5) * cell;
+    ang = h.dir > 0 ? 0 : Math.PI;
+  } else {
+    ax = (h.idx + 0.5) * cell;
+    ay = h.dir > 0 ? -pad / 2 : size + pad / 2;
+    ang = h.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+  }
+  return { ax, ay, ang };
+}
+function drawArrow(h) {
+  const { ax, ay, ang } = arrowPos(h);
+  const L = pad * 1.3;
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.rotate(ang);
+  ctx.translate(L / 2 - pad * 0.46, 0);
+  ctx.fillStyle = '#ff3b30';
+  ctx.beginPath();
+  // 有尾巴的箭頭：細長的箭桿 + 三角形箭頭
+  const hh = Math.min(cell * 0.34, L * 0.55), w = hh * 0.5, hx = -L * 0.12; // 箭桿半寬、箭頭半寬、箭頭起點
+  ctx.moveTo(-L / 2, -w);
+  ctx.lineTo(hx, -w);
+  ctx.lineTo(hx, -hh);
+  ctx.lineTo(L / 2, 0);
+  ctx.lineTo(hx, hh);
+  ctx.lineTo(hx, w);
+  ctx.lineTo(-L / 2, w);
+  ctx.closePath();
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.stroke();
+  ctx.restore();
+}
+
+// 石頭：不規則多邊形，邊移動邊滾動
+function drawRock(h) {
+  const n = h.shape.length;
+  // 地面陰影
+  ctx.fillStyle = 'rgba(0,0,0,0.16)';
+  ctx.beginPath();
+  if (h.horizontal) ctx.ellipse(h.x, h.y + h.r * 0.95, h.r * 0.9, h.r * 0.22, 0, 0, Math.PI * 2);
+  else ctx.ellipse(h.x + h.r * 0.95, h.y, h.r * 0.22, h.r * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.save();
+  ctx.translate(h.x, h.y);
+  ctx.rotate(h.rot);
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const rr = h.r * h.shape[i];
+    const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#8d8d8d';
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#4a4a4a';
+  ctx.stroke();
+  // 裂紋（跟著石頭旋轉）
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(40,40,40,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(-h.r * 0.1, -h.r * 0.55); ctx.lineTo(h.r * 0.12, -h.r * 0.1); ctx.lineTo(-h.r * 0.2, h.r * 0.25); ctx.lineTo(-h.r * 0.05, h.r * 0.6);
+  ctx.moveTo(h.r * 0.12, -h.r * 0.1); ctx.lineTo(h.r * 0.5, h.r * 0.05);
+  ctx.stroke();
+  // 光源固定在左上，不隨石頭旋轉
+  ctx.rotate(-h.rot);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath(); ctx.arc(-h.r * 0.3, -h.r * 0.35, h.r * 0.24, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.arc(h.r * 0.25, h.r * 0.3, h.r * 0.38, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// 立體滾動的石頭：輪廓不轉，表面的斑塊沿行進方向滾過去
+// （滾動角度 = 位移 / 半徑），越到邊緣越扁、轉到背面就消失，橫向與直向都一樣
+function drawRockRolling(h) {
+  const zr = h.z / ZDROP, lift = 1 + 0.9 * zr; // 位置越高，石頭看起來越大、陰影離得越遠
+  const R = h.r * (1 + 0.12 * zr), n = h.shape.length;
+  const trace = () => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2, rr = R * h.shape[i];
+      const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  };
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(h.x + R * 0.2 * lift, h.y + R * 0.3 * lift, R * 1.0, R * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.save();
+  ctx.translate(h.x, h.y - h.z * 0.6); // 在空中時，石頭本體往上偏，陰影留在地面
+  trace();
+  const g = ctx.createRadialGradient(-R * 0.35, -R * 0.4, R * 0.1, 0, 0, R * 1.1);
+  g.addColorStop(0, '#b9b6af'); g.addColorStop(0.6, '#8a8782'); g.addColorStop(1, '#5a5753');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save();
+  ctx.clip();
+  for (const s of h.spots) {
+    const a = s.phi + h.roll, c = Math.cos(a);
+    if (c <= 0.05) continue;
+    const u = Math.sin(a) * R * 0.95 * Math.sqrt(1 - s.lat * s.lat), w = s.lat * R * 0.95;
+    const sz = s.size * R * 1.8;
+    const rx = h.horizontal ? sz * c : sz, ry = h.horizontal ? sz : sz * c;
+    ctx.fillStyle = `rgba(45,42,40,${0.6 * c})`;
+    ctx.beginPath(); ctx.ellipse(h.horizontal ? u : w, h.horizontal ? w : u, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(210,206,198,${0.22 * c})`;
+    ctx.beginPath(); ctx.ellipse((h.horizontal ? u : w) - 2, (h.horizontal ? w : u) - 2, rx * 0.5, ry * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // 更細的顆粒（深色小坑洞與淺色礦物點）
+  for (const q of h.specks) {
+    const a = q.phi + h.roll, c = Math.cos(a);
+    if (c <= 0.05) continue;
+    const u = Math.sin(a) * R * 0.95 * Math.sqrt(1 - q.lat * q.lat), w = q.lat * R * 0.95, sz = q.size * R * 1.8;
+    const px = h.horizontal ? u : w, py = h.horizontal ? w : u;
+    ctx.fillStyle = q.light ? `rgba(225,222,214,${0.5 * c})` : `rgba(35,32,30,${0.7 * c})`;
+    ctx.beginPath(); ctx.ellipse(px, py, h.horizontal ? sz * c : sz, h.horizontal ? sz : sz * c, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // 裂紋（跟著石頭一起滾動）
+  ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+  for (const k of h.cracks) {
+    const a1 = k.phi + h.roll, a2 = a1 + k.dphi, c1 = Math.cos(a1), c2 = Math.cos(a2);
+    if (c1 <= 0.1 || c2 <= 0.1) continue;
+    const l2 = Math.max(-0.95, Math.min(0.95, k.lat + k.dlat));
+    const u1 = Math.sin(a1) * R * 0.95 * Math.sqrt(1 - k.lat * k.lat), w1 = k.lat * R * 0.95;
+    const u2 = Math.sin(a2) * R * 0.95 * Math.sqrt(1 - l2 * l2), w2 = l2 * R * 0.95;
+    ctx.strokeStyle = `rgba(30,28,26,${0.6 * Math.min(c1, c2)})`;
+    ctx.beginPath();
+    ctx.moveTo(h.horizontal ? u1 : w1, h.horizontal ? w1 : u1);
+    ctx.lineTo(h.horizontal ? u2 : w2, h.horizontal ? w2 : u2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  trace();
+  ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = '#45423e'; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath(); ctx.arc(-R * 0.3, -R * 0.38, R * 0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// ===== 激光關卡 =====
+// 流程：箭頭閃爍提示 → 箭頭位置出現發射器並蓄力 → 整列（整行）發射激光 → 激光消退
+const LASER_CHARGE = 40;  // 蓄力的幀數（以 60 幀/秒換算，約 0.67 秒）
+const LASER_FIRE = 26;    // 激光持續的幀數（約 0.43 秒）
+
+// 發射器：安裝在方格外、箭頭的位置，蓄力時炮口前端有一團火光，越來越亮
+function drawEmitter(h, p, glow) {
+  const { ax, ay, ang } = arrowPos(h);
+  const L = pad * 0.98;
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.rotate(ang); // +x 是發射方向
+  // 機身
+  ctx.fillStyle = '#2b2f36'; ctx.strokeStyle = '#9aa1ab'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-L * 0.45, -cell * 0.36, L * 0.9, cell * 0.72, cell * 0.08); else ctx.rect(-L * 0.45, -cell * 0.36, L * 0.9, cell * 0.72);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#4a515b';
+  ctx.fillRect(-L * 0.38, -cell * 0.24, L * 0.3, cell * 0.48);
+  // 鏡頭：蓄力時只在炮口（發射器前端）有一團火光，隨蓄力慢慢變亮
+  const fx = L * 0.28, flick = 1 + 0.12 * Math.sin(performance.now() / 35);
+  const R = cell * (0.08 + 0.14 * p) * flick;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(fx, 0); ctx.scale(1.15, 1);                  // 水平稍微拉長，火光接近圓形
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 2.2);
+  g.addColorStop(0, `rgba(255,255,255,${glow})`);
+  g.addColorStop(0.3, `rgba(255,150,60,${0.95 * glow})`);
+  g.addColorStop(1, 'rgba(255,80,20,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * 2.2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
+// 激光：整列（整行）一道光束，外圈光暈 + 紅色光芒 + 白色亮芯，強度 e（0~1）
+function drawBeam(h, e) {
+  const yc = (h.idx + 0.5) * cell;
+  const { ax, ay } = arrowPos(h), muzzle = (h.horizontal ? ax : ay) + h.dir * pad * 0.98 * 0.28;
+  const lo = h.dir > 0 ? muzzle : -pad, hi = h.dir > 0 ? size + pad : muzzle, len = hi - lo;
+  const jit = 0.92 + 0.08 * Math.random();
+  ctx.save();
+  const layer = (T, col) => {
+    ctx.strokeStyle = col; ctx.lineWidth = T; ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (h.horizontal) { ctx.moveTo(lo, yc); ctx.lineTo(hi, yc); } else { ctx.moveTo(yc, lo); ctx.lineTo(yc, hi); }
+    ctx.stroke();
+  };
+  layer(cell * 1.0 * e * jit, 'rgba(255,60,10,0.4)');
+  layer(cell * 0.72 * e * jit, 'rgba(255,90,15,0.65)');
+  layer(cell * 0.4 * e, 'rgba(255,135,30,0.88)');
+  layer(cell * 0.16 * e, 'rgba(255,225,160,1)');
+  ctx.restore();
+  // 沿著光束迸出的火花
+  if (e > 0.3) {
+    for (let k = 0; k < 2; k++) {
+      const u = lo + Math.random() * len, s = (Math.random() - 0.5) * 3;
+      particles.push({ x: h.horizontal ? u : yc, y: h.horizontal ? yc : u, vx: h.horizontal ? (Math.random() - 0.5) * 2 : s, vy: h.horizontal ? s : (Math.random() - 0.5) * 2, size: 2 + Math.random() * 2, life: 1, spark: true });
+    }
+  }
+}
+
+// ===== 飛彈關卡：紅色範圍圈由小變大（鎖定）→ 飛彈從上方落下 → 打到地板爆炸，範圍內的人會被炸到 =====
+const MISSILE_LOCK = 72;
+const MISSILE_DROP = 26;
+const MISSILE_BOOM = 50;
+const MISSILE_R = cell * 0.55;
+function spawnMissiles(elapsed) {
+  const count = Math.min(10, 5 + Math.floor(elapsed / 8));
+  const used = new Set();
+  hazards.forEach(h => { if (h.missile) used.add(h.c + ',' + h.r); });
+  let n = 0, tries = 0;
+  while (n < count && tries++ < 60) {
+    let c = Math.floor(Math.random() * N), r = Math.floor(Math.random() * N);
+    if (n === 0 && Math.random() < 0.6) { c = player.c; r = player.r; }
+    const key = c + ',' + r;
+    if (used.has(key)) continue;
+    used.add(key);
+    hazards.push({ missile: true, c, r, phase: 'lock', t: 0 });
+    n++;
+  }
+}
+function updateMissile(h, dt, i) {
+  const x = (h.c + 0.5) * cell, y = (h.r + 0.5) * cell;
+  h.t += dt;
+  if (h.phase === 'lock') {
+    const p = Math.min(1, h.t / MISSILE_LOCK), rad = MISSILE_R * (0.1 + 0.9 * p);
+    const blink = p > 0.7 ? 0.5 + 0.5 * Math.sin(h.t * 0.9) : 1;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    g.addColorStop(0, `rgba(255,40,30,${(0.12 + 0.3 * p) * blink})`); g.addColorStop(1, `rgba(255,40,30,${(0.28 + 0.4 * p) * blink})`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = `rgba(255,70,50,${0.95 * blink})`; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.stroke();
+    ctx.save(); ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,80,60,0.55)'; ctx.beginPath(); ctx.arc(x, y, MISSILE_R, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,70,50,${0.8 * blink})`; ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x + 9, y); ctx.moveTo(x, y - 9); ctx.lineTo(x, y + 9); ctx.stroke();
+    if (h.t >= MISSILE_LOCK) { h.phase = 'drop'; h.t = 0; sfxMissileFall(); }
+    return;
+  }
+  if (h.phase === 'drop') {
+    const q = Math.min(1, h.t / MISSILE_DROP), my = y - cell * 5 * (1 - q * q);
+    ctx.fillStyle = `rgba(255,40,30,${0.4 + 0.15 * Math.sin(h.t)})`; ctx.beginPath(); ctx.arc(x, y, MISSILE_R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,80,60,0.95)'; ctx.beginPath(); ctx.arc(x, y, MISSILE_R, 0, Math.PI * 2); ctx.stroke();
+    ctx.save(); ctx.translate(x, my); ctx.scale(2.1, 2.1);
+    const fl = ctx.createLinearGradient(0, -cell * 0.95, 0, -cell * 0.2); fl.addColorStop(0, 'rgba(255,200,60,0)'); fl.addColorStop(0.6, 'rgba(255,170,40,0.8)'); fl.addColorStop(1, 'rgba(255,255,200,0.95)');
+    ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(-cell * 0.08, -cell * 0.3); ctx.lineTo(0, -cell * (0.85 + 0.15 * Math.sin(h.t * 1.7))); ctx.lineTo(cell * 0.08, -cell * 0.3); ctx.fill();
+    ctx.fillStyle = '#4b5159'; ctx.beginPath(); ctx.moveTo(-cell * 0.08, -cell * 0.3); ctx.lineTo(-cell * 0.19, -cell * 0.44); ctx.lineTo(-cell * 0.08, -cell * 0.16); ctx.moveTo(cell * 0.08, -cell * 0.3); ctx.lineTo(cell * 0.19, -cell * 0.44); ctx.lineTo(cell * 0.08, -cell * 0.16); ctx.fill();
+    ctx.fillStyle = '#c5ccd5'; ctx.fillRect(-cell * 0.08, -cell * 0.33, cell * 0.16, cell * 0.33);
+    ctx.fillStyle = '#8f98a3'; ctx.fillRect(cell * 0.02, -cell * 0.33, cell * 0.06, cell * 0.33);
+    ctx.fillStyle = '#ffd23a'; ctx.fillRect(-cell * 0.08, -cell * 0.2, cell * 0.16, cell * 0.04);
+    ctx.fillStyle = '#e0372b'; ctx.beginPath(); ctx.moveTo(-cell * 0.08, 0); ctx.lineTo(0, cell * 0.2); ctx.lineTo(cell * 0.08, 0); ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = '#1d2128'; ctx.strokeRect(-cell * 0.08, -cell * 0.33, cell * 0.16, cell * 0.33); ctx.beginPath(); ctx.moveTo(-cell * 0.08, 0); ctx.lineTo(0, cell * 0.2); ctx.lineTo(cell * 0.08, 0); ctx.stroke();
+    ctx.restore();
+    if (h.t >= MISSILE_DROP) { h.phase = 'boom'; h.t = 0; explodeMissile(x, y, h); }
+    return;
+  }
+  const b = Math.min(1, h.t / MISSILE_BOOM), tt = h.t;
+  if (!isGameOver && tt < 12 && Math.hypot(player.px - x, player.py - y) < MISSILE_R * 0.98) { player.zap = performance.now(); endGame(); }
+  ctx.fillStyle = `rgba(255,150,60,${0.3 * (1 - b)})`; ctx.beginPath(); ctx.arc(x, y, MISSILE_R * 2.6, 0, Math.PI * 2); ctx.fill();
+  if (tt < 5) { const fl = ctx.createRadialGradient(x, y, 0, x, y, MISSILE_R * 2); fl.addColorStop(0, `rgba(255,255,240,${1 - tt / 5})`); fl.addColorStop(1, 'rgba(255,230,160,0)'); ctx.fillStyle = fl; ctx.beginPath(); ctx.arc(x, y, MISSILE_R * 2, 0, Math.PI * 2); ctx.fill(); }
+  const sw = MISSILE_R * (0.5 + 1.7 * b);
+  const dg = ctx.createRadialGradient(x, y, sw * 0.6, x, y, sw); dg.addColorStop(0, 'rgba(190,160,120,0)'); dg.addColorStop(1, `rgba(190,160,120,${0.4 * (1 - b)})`);
+  ctx.fillStyle = dg; ctx.beginPath(); ctx.arc(x, y, sw, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 1 + 5 * (1 - b); ctx.strokeStyle = `rgba(255,235,200,${0.85 * (1 - b)})`; ctx.beginPath(); ctx.arc(x, y, sw, 0, Math.PI * 2); ctx.stroke();
+  h.blobs.forEach(o => {
+    const k = Math.max(0, Math.min(1, (tt - o.d) / (MISSILE_BOOM * 0.8)));
+    if (k <= 0 || k >= 1) return;
+    const e = 1 - Math.pow(1 - k, 2), bx = x + Math.cos(o.a) * o.r * e, by = y + Math.sin(o.a) * o.r * e * 0.8 - o.up * e, br = o.s * (0.5 + 0.8 * e);
+    const g = ctx.createRadialGradient(bx, by, 0, bx, by, br), al = Math.pow(1 - k, 1.2);
+    g.addColorStop(0, `rgba(255,245,200,${al})`); g.addColorStop(0.35, `rgba(255,170,50,${0.95 * al})`); g.addColorStop(0.7, `rgba(210,60,15,${0.7 * al})`); g.addColorStop(1, 'rgba(90,20,5,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+  });
+  h.smoke.forEach(o => {
+    const k = Math.max(0, Math.min(1, (tt - o.d) / (MISSILE_BOOM * 1.4)));
+    if (k <= 0 || k >= 1) return;
+    const sx = x + o.dx * k * cell, sy = y - o.rise * k * cell, sr = cell * (0.18 + o.s * k), al = 0.55 * Math.sin(Math.PI * Math.min(1, k * 1.15));
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr); g.addColorStop(0, `rgba(48,42,40,${al})`); g.addColorStop(1, 'rgba(48,42,40,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+  });
+  h.debris.forEach(o => {
+    o.x += o.vx * dt; o.y += o.vy * dt; o.vy += 0.38 * dt; o.rot += o.vr * dt;
+    const al = Math.max(0, 1 - tt / (MISSILE_BOOM * 1.3));
+    if (al <= 0) return;
+    ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot); ctx.globalAlpha = al; ctx.fillStyle = o.c; ctx.fillRect(-o.s / 2, -o.s / 2, o.s, o.s * 0.7); ctx.restore();
+  });
+  if (h.t >= MISSILE_BOOM + 40) hazards.splice(i, 1);
+}
+function explodeMissile(x, y, h) {
+  h.blobs = Array.from({ length: 12 }, () => ({ a: Math.random() * Math.PI * 2, r: MISSILE_R * (0.15 + Math.random() * 0.85), up: cell * (0.1 + Math.random() * 0.5), s: cell * (0.28 + Math.random() * 0.3), d: Math.random() * 6 }));
+  h.smoke = Array.from({ length: 8 }, () => ({ dx: (Math.random() - 0.5) * 0.7, rise: 0.5 + Math.random() * 1.1, s: 0.3 + Math.random() * 0.3, d: 4 + Math.random() * 10 }));
+  h.debris = Array.from({ length: 16 }, () => { const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 4.5; return { x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6 - 3 - Math.random() * 3, rot: 0, vr: (Math.random() - 0.5) * 0.5, s: 4 + Math.random() * 6, c: Math.random() < 0.5 ? '#4a3220' : '#7a5632' }; });
+  for (let k = 0; k < 14; k++) { const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 6; particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: 2 + Math.random() * 2, life: 0.6, spark: true }); }
+  craters.push({ x, y, t: 0, jr: Array.from({ length: 16 }, () => 0.78 + Math.random() * 0.34), sp: Array.from({ length: 10 }, (_, q) => ({ a: q / 10 * Math.PI * 2 + Math.random() * 0.5, r: 0.85 + Math.random() * 0.3, l: 0.12 + Math.random() * 0.22, w: 0.04 + Math.random() * 0.05, c: Math.random() < 0.5 ? '#d9b27a' : '#8a5a2e' })) });
+  shakeTime = Math.max(shakeTime, 16);
+  sfxBoom();
+  if (!isGameOver && Math.hypot(player.px - x, player.py - y) < MISSILE_R * 0.98) {
+    player.zap = performance.now();
+    endGame();
+  }
+}
+function drawCraters() {
+  const now = performance.now() / 1000;
+  craters = craters.filter(c => c.t < 260);
+  craters.forEach(c => {
+    c.t++;
+    const R = cell * 0.4, sy = 0.78, g = Math.max(8, cell * 0.2);
+    ctx.save(); ctx.beginPath(); ctx.rect(Math.floor(c.x / cell) * cell, Math.floor(c.y / cell) * cell, cell, cell); ctx.clip(); ctx.translate(c.x, c.y); ctx.globalAlpha = Math.max(0, Math.min(1, c.t / 4, (260 - c.t) / 70));
+    const hl = ctx.createRadialGradient(0, 0, R * 0.5, 0, 0, R * 1.3); hl.addColorStop(0, 'rgba(15,8,3,0.7)'); hl.addColorStop(1, 'rgba(15,8,3,0)');
+    ctx.fillStyle = hl; ctx.beginPath(); ctx.ellipse(0, 0, R * 1.3, R * 1.3 * sy, 0, 0, Math.PI * 2); ctx.fill();
+    const n = c.jr.length, pts = c.jr.map((k, i) => { const th = i / n * Math.PI * 2; return [Math.cos(th) * R * 0.9 * k, Math.sin(th) * R * 0.9 * k * sy]; });
+    const path = () => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); };
+    c.sp.forEach(s => {
+      const ca = Math.cos(s.a), sa = Math.sin(s.a);
+      ctx.strokeStyle = 'rgba(12,6,2,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ca * R * 0.85, sa * R * 0.85 * sy); ctx.lineTo(ca * R * (1 + s.l * 2.2), sa * R * (1 + s.l * 2.2) * sy); ctx.stroke();
+    });
+    path(); const pg = ctx.createRadialGradient(0, 0, 0, 0, 0, R); pg.addColorStop(0, '#080504'); pg.addColorStop(0.7, '#1d120a'); pg.addColorStop(1, '#3a2514');
+    ctx.fillStyle = pg; ctx.fill();
+    ctx.save(); path(); ctx.clip();
+    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.translate(0, 2); path(); ctx.stroke();
+    ctx.restore();
+    ctx.lineWidth = 1.3; ctx.strokeStyle = 'rgba(205,150,90,0.4)'; ctx.translate(0, 1.5); path(); ctx.stroke(); ctx.translate(0, -1.5);
+    ctx.lineWidth = 2; ctx.strokeStyle = '#120a05'; path(); ctx.stroke();
+    c.sp.forEach((s, i) => {
+      const fx = Math.cos(s.a) * R * 0.45 * s.r, fy = Math.sin(s.a) * R * 0.45 * s.r * sy;
+      ctx.fillStyle = 'rgba(60,40,25,0.7)'; ctx.fillRect(fx - 1.5, fy - 1, 3, 2);
+      const em = Math.max(0, 1 - c.t / 100) * (0.5 + 0.5 * Math.sin(now * 12 + i * 2));
+      if (em > 0.02) { ctx.fillStyle = `rgba(255,120,30,${0.8 * em})`; ctx.beginPath(); ctx.arc(fx * 0.8, fy * 0.8, 2.2, 0, Math.PI * 2); ctx.fill(); }
+    });
+    ctx.restore();
+  });
+}
+function sfxMissileFall() {
+  if (!actx) return;
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const t = actx.currentTime, D = 0.45;
+  const n = actx.createBufferSource(); n.buffer = whooshBuf;
+  const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(3200, t + D * 0.45); f.frequency.exponentialRampToValueAtTime(1200, t + D);
+  const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.7, t + D * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + D);
+  n.connect(f); f.connect(g); g.connect(sfxGain); n.start(t, 0, 0.58);
+}
+function sfxBoom() {
+  if (!actx) return;
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const t = actx.currentTime;
+  const burst = (type, f0, f1, dur, vol, delay) => {
+    const n = actx.createBufferSource(); n.buffer = whooshBuf;
+    const f = actx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(f0, t + delay); f.frequency.exponentialRampToValueAtTime(f1, t + delay + dur);
+    const g = actx.createGain(); g.gain.setValueAtTime(vol, t + delay); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + dur);
+    n.connect(f); f.connect(g); g.connect(sfxGain); n.start(t + delay, Math.random() * 0.1, Math.min(0.55, dur + 0.05));
+  };
+  burst('lowpass', 1500, 90, 1.0, 1.5, 0);
+  burst('lowpass', 500, 45, 1.6, 1.4, 0.05);
+  burst('lowpass', 250, 32, 2.0, 1.0, 0.25);
+  [[75, 20, 1.5, 1.5], [45, 16, 2.0, 1.2]].forEach(([f0, f1, d, v]) => {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + d + 0.05);
+  });
+}
+const BAL_SIZES = [{ r: 0.2, reach: 0 }, { r: 0.28, reach: 1 }, { r: 0.36, reach: 2 }];
+const BAL_THROW = 30, BAL_SIT = 26, BAL_INFL = 50, BAL_SPLASH = 22;
+const BAL_COLORS = ['#3fc8ff', '#58d3ff', '#32b7f0'];
+function shade(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const t = a < 0 ? 0 : 255, k = Math.abs(a);
+  r = Math.round(r + (t - r) * k); g = Math.round(g + (t - g) * k); b = Math.round(b + (t - b) * k);
+  return `rgb(${r},${g},${b})`;
+}
+function balloonCells(c0, r0, reach) {
+  const out = [];
+  for (let dc = -reach; dc <= reach; dc++) for (let dr = -reach; dr <= reach; dr++) {
+    if (dc !== 0 && dr !== 0) continue;
+    const c = c0 + dc, r = r0 + dr;
+    if (c >= 0 && c < N && r >= 0 && r < N) out.push([c, r]);
+  }
+  return out;
+}
+function spawnBalloons(elapsed) {
+  const live = hazards.filter(h => h.balloon && h.phase !== 'splash');
+  if (live.length >= 8) return;
+  const count = Math.min(4, 2 + Math.floor(elapsed / 12));
+  const used = new Set(live.map(h => h.c + ',' + h.r));
+  const pL = Math.min(0.4, elapsed / 90), pM = 0.35;
+  let n = 0, tries = 0;
+  while (n < count && tries++ < 60) {
+    let c = Math.floor(Math.random() * N), r = Math.floor(Math.random() * N);
+    if (n === 0 && Math.random() < 0.45) { c = Math.max(0, Math.min(N - 1, Math.floor(player.px / cell))); r = Math.max(0, Math.min(N - 1, Math.floor(player.py / cell))); }
+    const key = c + ',' + r;
+    if (used.has(key)) continue;
+    used.add(key);
+    const q = Math.random(), sz = q < pL ? 2 : q < pL + pM ? 1 : 0;
+    const side = Math.floor(Math.random() * 4), u = Math.random() * size, far = pad + 40;
+    const sx = side === 2 ? -far : side === 3 ? size + far : u, sy = side === 0 ? -far : side === 1 ? size + far : u;
+    hazards.push({ balloon: true, c, r, sz, color: BAL_COLORS[Math.floor(Math.random() * BAL_COLORS.length)], phase: 'throw', t: 0, sx, sy, spin: (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.1) });
+    n++;
+  }
+  if (n) sfxBalloonThrow();
+}
+function drawBalloon(x, y, R, color, sx, sy, rot, fl = 0) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sx, sy);
+  const body = () => { ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); };
+  ctx.save(); ctx.rotate(-Math.PI / 4);
+  ctx.fillStyle = shade(color, -0.15); ctx.strokeStyle = shade(color, -0.5); ctx.lineWidth = Math.max(1.2, R * 0.07);
+  ctx.beginPath(); ctx.moveTo(R * 0.85, -R * 0.2); ctx.lineTo(R * 1.28, -R * 0.1); ctx.lineTo(R * 1.28, R * 0.1); ctx.lineTo(R * 0.85, R * 0.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(R * 1.3, 0, R * 0.13, R * 0.17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1.5, R * 0.1); ctx.beginPath(); ctx.moveTo(R * 1.38, 0); ctx.quadraticCurveTo(R * 1.58, -R * 0.02, R * 1.62, R * 0.24); ctx.stroke();
+  ctx.restore();
+  body(); const g = ctx.createRadialGradient(-R * 0.3, -R * 0.35, R * 0.1, 0, 0, R * 1.1); g.addColorStop(0, 'rgba(215,248,255,0.95)'); g.addColorStop(0.55, color); g.addColorStop(1, shade(color, -0.4));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); body(); ctx.clip();
+  const ph = Date.now() / 160; ctx.fillStyle = 'rgba(20,120,200,0.38)'; ctx.beginPath(); ctx.moveTo(-R * 1.1, R * 1.2);
+  for (let q = 0; q <= 12; q++) { const wx = -R * 1.1 + q / 12 * R * 2.2; ctx.lineTo(wx, -R * 0.1 + Math.sin(wx / R * 3 + ph) * R * 0.07); }
+  ctx.lineTo(R * 1.1, R * 1.2); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(235,250,255,0.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); for (let q = 0; q <= 12; q++) { const wx = -R * 0.9 + q / 12 * R * 1.8, wy = -R * 0.1 + Math.sin(wx / R * 3 + ph) * R * 0.07; q ? ctx.lineTo(wx, wy) : ctx.moveTo(wx, wy); } ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; [[0.25, 0.4, 0.07], [-0.3, 0.6, 0.05], [0.1, 0.7, 0.045]].forEach(b => { ctx.beginPath(); ctx.arc(R * b[0], R * b[1], R * b[2], 0, Math.PI * 2); ctx.fill(); });
+  if (fl > 0) { ctx.fillStyle = `rgba(255,255,255,${0.7 * fl})`; ctx.fillRect(-R, -R, R * 2, R * 2); }
+  ctx.restore();
+  body(); ctx.lineWidth = Math.max(1.5, R * 0.08); ctx.strokeStyle = shade(color, -0.5); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.ellipse(-R * 0.4, -R * 0.45, R * 0.15, R * 0.3, -0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-R * 0.12, -R * 0.75, R * 0.06, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawWaterJet(x, y, dx, dy, len, th, tt, life, seed) {
+  if (len <= 1) return;
+  const px = -dy, py = dx, hs = (k, m) => { const v = Math.sin(k * 12.9898 + m * 78.233 + seed) * 43758.5453; return v - Math.floor(v); };
+  ctx.globalAlpha = life;
+  ctx.fillStyle = 'rgb(66,184,236)'; ctx.beginPath(); ctx.moveTo(x + px * th * 0.5, y + py * th * 0.5);
+  for (let i = 0; i <= 10; i++) { const s = i / 10 * len, w = th * 0.5 * (1 + 0.15 * Math.sin(s * 0.2 + tt * 0.5 + seed)); ctx.lineTo(x + dx * s + px * w, y + dy * s + py * w); }
+  for (let i = 10; i >= 0; i--) { const s = i / 10 * len, w = th * 0.5 * (1 + 0.15 * Math.sin(s * 0.23 - tt * 0.5 + seed)); ctx.lineTo(x + dx * s - px * w, y + dy * s - py * w); }
+  ctx.closePath(); ctx.fill();
+  const N = Math.ceil(len / 2.4);
+  for (let k = 0; k < N; k++) {
+    const ph = (tt * 0.08 + hs(k, 1)) % 1, s = (k + hs(k, 2)) / N * len, o = (hs(k, 3) - 0.5) * th * 1.05, lift = Math.sin(Math.PI * ph) * cell * 0.26, r = (3.4 + hs(k, 4) * 6) * (0.55 + 0.45 * Math.sin(Math.PI * ph));
+    const sx = x + dx * s + px * o, sy = y + dy * s + py * o - lift;
+    ctx.fillStyle = ['#52c6f5', '#6fd3fa', '#3bb5ec'][k % 3]; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(15,125,200,0.6)'; ctx.stroke();
+    ctx.fillStyle = 'rgba(225,244,255,0.5)'; ctx.beginPath(); ctx.arc(sx - r * 0.3, sy - r * 0.3, r * 0.3, 0, Math.PI * 2); ctx.fill();
+  }
+  for (let k = 0; k < Math.ceil(len / cell) * 3; k++) {
+    const ph = (tt * 0.06 + hs(k, 5)) % 1, s = hs(k, 6) * len, o = (hs(k, 7) - 0.5) * th * 0.9;
+    ctx.strokeStyle = `rgba(190,228,248,${0.4 * (1 - ph)})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x + dx * s + px * o, y + dy * s + py * o, 3 + ph * 8, (3 + ph * 8) * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawSplashBlob(x, y, rad, tt, life, seed) {
+  const hs = (k, m) => { const v = Math.sin(k * 12.9898 + m * 78.233 + seed) * 43758.5453; return v - Math.floor(v); };
+  ctx.globalAlpha = life;
+  ctx.fillStyle = 'rgb(66,184,236)'; ctx.beginPath(); ctx.arc(x, y, rad * 0.8, 0, Math.PI * 2); ctx.fill();
+  for (let k = 0; k < 34; k++) {
+    const ph = (tt * 0.08 + hs(k, 1)) % 1, an = hs(k, 2) * Math.PI * 2, d = Math.sqrt(hs(k, 3)) * rad * 0.85, lift = Math.sin(Math.PI * ph) * cell * 0.07, r = (2.8 + hs(k, 4) * 4) * (0.55 + 0.45 * Math.sin(Math.PI * ph));
+    const sx = x + Math.cos(an) * d, sy = y + Math.sin(an) * d - lift;
+    ctx.fillStyle = ['#52c6f5', '#6fd3fa', '#3bb5ec'][k % 3]; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(15,125,200,0.6)'; ctx.stroke();
+    ctx.fillStyle = 'rgba(225,244,255,0.5)'; ctx.beginPath(); ctx.arc(sx - r * 0.3, sy - r * 0.3, r * 0.3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function burstBalloon(h) {
+  const reach = BAL_SIZES[h.sz].reach, x = (h.c + 0.5) * cell, y = (h.r + 0.5) * cell;
+  h.cells = balloonCells(h.c, h.r, reach);
+  const nd = 12 + (reach + 1) * 14;
+  h.drops = Array.from({ length: nd }, () => { const a = Math.random() * Math.PI * 2, dist = cell * (0.3 + Math.random() * (reach + 0.6)); return { gx: x, gy: y, vx: Math.cos(a) * dist / 20, vy: Math.sin(a) * dist / 20 * 0.8, z: 6, vz: 3.5 + Math.random() * 1.5, s: 2 + Math.random() * 2.5 }; });
+  shakeTime = Math.max(shakeTime, 5 + reach * 3);
+  sfxSplash(reach);
+  const pc = Math.floor(player.px / cell), pr = Math.floor(player.py / cell);
+  if (!isGameOver && h.cells.some(cr => cr[0] === pc && cr[1] === pr)) { player.wet = performance.now(); endGame(); }
+}
+function updateBalloon(h, dt, i) {
+  const S = BAL_SIZES[h.sz], R = cell * S.r, tx = (h.c + 0.5) * cell, ty = (h.r + 0.5) * cell;
+  h.t += dt;
+  if (h.phase === 'throw') {
+    const p = Math.min(1, h.t / BAL_THROW), gx = h.sx + (tx - h.sx) * p, gy = h.sy + (ty - h.sy) * p;
+    ctx.fillStyle = `rgba(0,60,90,${0.25 * p})`; ctx.beginPath(); ctx.ellipse(gx, gy + R * 0.9, R * (0.5 + 0.6 * p), R * 0.3 * (0.5 + 0.6 * p), 0, 0, Math.PI * 2); ctx.fill();
+    drawBalloon(gx, gy - Math.sin(Math.PI * p) * cell * 1.8, R, h.color, 1, 1, h.t * h.spin);
+    if (h.t >= BAL_THROW) { h.phase = 'sit'; h.t = 0; sfxBalloonLand(); }
+  } else if (h.phase === 'sit') {
+    const tt = h.t, bounce = Math.abs(Math.sin(tt * 0.28)) * cell * 0.25 * Math.max(0, 1 - tt / BAL_SIT), sq = Math.max(0, 1 - tt / 10) * 0.3;
+    ctx.fillStyle = 'rgba(0,60,90,0.25)'; ctx.beginPath(); ctx.ellipse(tx, ty + R * 0.9, R * 1.1, R * 0.33, 0, 0, Math.PI * 2); ctx.fill();
+    drawBalloon(tx, ty - bounce, R, h.color, 1 + sq, 1 - sq, 0);
+    if (h.t >= BAL_SIT) { h.phase = 'infl'; h.t = 0; sfxBalloonInflate(BAL_INFL / 60); }
+  } else if (h.phase === 'infl') {
+    const tt = h.t, p = Math.min(1, tt / BAL_INFL);
+    const jit = (0.008 + 0.05 * p * p) * cell, x = tx + Math.sin(tt * 2.3) * jit, y2 = ty + Math.cos(tt * 3.1) * jit * 0.6;
+    const fl = p < 0.3 ? 0 : Math.max(0, Math.sin(tt * (0.5 + 2.4 * p))) * (0.35 + 0.45 * p);
+    ctx.fillStyle = 'rgba(0,60,90,0.25)'; ctx.beginPath(); ctx.ellipse(tx, ty + R * 0.95, R * 1.0, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    const q = Math.sin(tt * (0.8 + 3 * p)) * 0.03; drawBalloon(x, y2, R, h.color, 1 + q, 1 - q, 0, fl);
+    if (h.t >= BAL_INFL) { h.phase = 'splash'; h.t = 0; burstBalloon(h); }
+  } else {
+    const reach = S.reach, x = tx, y = ty, tt = h.t, b = Math.min(1, tt / 12), fade = Math.max(0, 1 - Math.max(0, tt - 8) / (BAL_SPLASH - 8));
+    if (!isGameOver && tt < BAL_SPLASH - 8 && h.cells.some(cr => cr[0] === Math.floor(player.px / cell) && cr[1] === Math.floor(player.py / cell))) { player.wet = performance.now(); endGame(); }
+    h.cells.forEach(cr => {
+      const cx = (cr[0] + 0.5) * cell, cy = (cr[1] + 0.5) * cell, d = Math.abs(cr[0] - h.c) + Math.abs(cr[1] - h.r), k = Math.max(0, Math.min(1, (tt - d * 3) / 8));
+      if (k <= 0) return;
+      ctx.fillStyle = `rgba(110,205,255,${0.4 * fade * k})`; ctx.beginPath(); ctx.ellipse(cx, cy, cell * 0.47 * k, cell * 0.4 * k, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,255,255,${0.7 * fade * k})`; ctx.beginPath(); ctx.ellipse(cx, cy, cell * 0.47 * k, cell * 0.4 * k, 0, 0, Math.PI * 2); ctx.stroke();
+    });
+    ctx.save(); ctx.beginPath(); h.cells.forEach(cr => ctx.rect(cr[0] * cell, cr[1] * cell, cell, cell)); ctx.clip();
+    const ease = Math.min(1, tt / 6), life = tt < BAL_SPLASH - 8 ? 1 : Math.max(0, (BAL_SPLASH - tt) / 8), th = cell * 0.5 * (0.6 + 0.4 * ease) * (0.4 + 0.6 * life);
+    (reach === 0 ? [] : [[1, 0], [-1, 0], [0, 1], [0, -1]]).forEach((dv, di) => {
+      const n = h.cells.filter(cr => (dv[0] ? cr[1] === h.r && (cr[0] - h.c) * dv[0] > 0 : cr[0] === h.c && (cr[1] - h.r) * dv[1] > 0)).length;
+      drawWaterJet(x, y, dv[0], dv[1], (n > 0 ? n * cell : reach === 0 ? cell * 0.42 : 0) * ease, th * (reach === 0 ? 0.62 : 1), tt, life, di * 1.7 + h.c + h.r);
+    });
+    if (reach === 0) drawSplashBlob(x, y, cell * 0.36 * (0.6 + 0.4 * ease), tt, life, h.c + h.r);
+    h.drops.forEach(o => {
+      if (o.done === undefined) { o.gx += o.vx * dt; o.gy += o.vy * dt; o.z += o.vz * dt; o.vz -= 0.35 * dt; if (o.z <= 0) { o.z = 0; o.done = tt; } }
+      const age = o.done === undefined ? 0 : tt - o.done;
+      if (age > 10) return;
+      ctx.fillStyle = `rgba(190,235,255,${0.9 * (1 - age / 10)})`; ctx.beginPath(); ctx.arc(o.gx, o.gy - o.z, o.s * (1 + age * 0.12), 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${0.9 * (1 - age / 10)})`; ctx.beginPath(); ctx.arc(o.gx - o.s * 0.3, o.gy - o.z - o.s * 0.3, o.s * 0.35, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.restore();
+    if (h.t >= BAL_SPLASH) hazards.splice(i, 1);
+  }
+}
+function sfxNoise(type, f0, f1, q, vol, att, dur, delay = 0) {
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const t = actx.currentTime, n = actx.createBufferSource(); n.buffer = whooshBuf;
+  const f = actx.createBiquadFilter(); f.type = type; f.Q.value = q;
+  f.frequency.setValueAtTime(f0, t + delay); f.frequency.exponentialRampToValueAtTime(f1, t + delay + dur);
+  const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t + delay); g.gain.exponentialRampToValueAtTime(vol, t + delay + att); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + dur);
+  n.connect(f); f.connect(g); g.connect(sfxGain); n.start(t + delay, 0, 0.58);
+}
+function sfxBalloonThrow() {
+  if (!actx) return;
+  sfxNoise('bandpass', 900, 2600, 1.2, 0.22, 0.05, 0.3);
+}
+function sfxBalloonLand() {
+  if (!actx) return;
+  const t = actx.currentTime;
+  [[0, 1, 0.26], [0.22, 0.85, 0.15]].forEach(([d, k, v]) => {
+    const o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 650; f.Q.value = 0.5;
+    o.type = 'sine'; o.frequency.setValueAtTime(300 * k, t + d); o.frequency.exponentialRampToValueAtTime(170 * k, t + d + 0.1); o.frequency.exponentialRampToValueAtTime(215 * k, t + d + 0.22);
+    g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(v, t + d + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.28);
+    o.connect(f); f.connect(g); g.connect(sfxGain); o.start(t + d); o.stop(t + d + 0.32);
+  });
+}
+function sfxBalloonInflate(dur) {
+  if (!actx) return;
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), v = actx.createOscillator(), vg = actx.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(380, t); o.frequency.exponentialRampToValueAtTime(1100, t + dur);
+  v.frequency.value = 16; vg.gain.setValueAtTime(5, t); vg.gain.linearRampToValueAtTime(60, t + dur); v.connect(vg); vg.connect(o.frequency);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + dur * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.03);
+  o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + dur + 0.05); v.start(t); v.stop(t + dur + 0.05);
+  sfxNoise('bandpass', 2500, 4500, 1, 0.05, dur * 0.6, dur);
+}
+function sfxSplash(reach) {
+  if (!actx) return;
+  const t = actx.currentTime, k = 1 + reach * 0.3;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(700 / k, t); o.frequency.exponentialRampToValueAtTime(160 / k, t + 0.09);
+  g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.15);
+  sfxNoise('bandpass', 2200 / k, 700 / k, 0.9, 0.55, 0.01, 0.35 + reach * 0.15);
+  sfxNoise('highpass', 5000, 3000, 0.7, 0.14, 0.02, 0.28 + reach * 0.1, 0.03);
+  const b = actx.createOscillator(), bg = actx.createGain();
+  b.type = 'sine'; b.frequency.setValueAtTime(240 / k, t + 0.02); b.frequency.exponentialRampToValueAtTime(80 / k, t + 0.3 + reach * 0.1);
+  bg.gain.setValueAtTime(0.5 * k, t + 0.02); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.32 + reach * 0.1);
+  b.connect(bg); bg.connect(sfxGain); b.start(t + 0.02); b.stop(t + 0.5 + reach * 0.1);
+}
+
+function updateLaser(h, dt, i) {
+  if (h.phase === 'warn') {
+    h.warn -= dt;
+    if (Math.floor(h.warn / 5) % 2 === 0) drawArrow(h);
+    if (h.warn <= 0) { h.phase = 'charge'; h.t = 0; sfxCharge(); }
+    return;
+  }
+  h.t += dt;
+  if (h.phase === 'charge') {
+    drawEmitter(h, Math.min(1, h.t / LASER_CHARGE), 1);
+    if (h.t >= LASER_CHARGE) { h.phase = 'fire'; h.t = 0; sfxLaser(); }
+    return;
+  }
+  const f = h.t;
+  const e = Math.min(1, f / 3) * (f > LASER_FIRE - 8 ? Math.max(0, (LASER_FIRE - f) / 8) : 1);
+  drawBeam(h, e);
+  drawEmitter(h, 1 + 1.5 * e, Math.max(0.35, e));
+  if (!isGameOver && e > 0.55) {
+    const dist = h.horizontal ? Math.abs(player.py - (h.idx + 0.5) * cell) : Math.abs(player.px - (h.idx + 0.5) * cell);
+    if (dist < cell * 0.38) {
+      player.zap = performance.now();
+      shakeTime = 8;
+      sfxZapDie();
+      endGame();
+    }
+  }
+  if (f >= LASER_FIRE) hazards.splice(i, 1);
+}
+
+// 結束遊戲：記錄成績（每個關卡各自的最佳紀錄），稍後顯示結算畫面
+function endGame() {
+  isGameOver = true;
+  const secs = parseFloat(ui.innerText);
+  const isNew = secs > bests[level];
+  if (isNew) {
+    bests[level] = secs;
+    try { localStorage.setItem(level === 'laser' ? 'mrOopsBestLaser' : level === 'missile' ? 'mrOopsBestMissile' : level === 'balloon' ? 'mrOopsBestBalloon' : 'mrOopsBest', String(secs)); } catch (e) {}
+    showBest(); saveBestRemote();
+  }
+  finalScore.innerText = `你撐了 ${ui.innerText}` + (isNew ? '（新紀錄！）' : '');
+  setTimeout(() => { if (isGameOver) gameoverScreen.style.display = 'flex'; }, level === 'laser' ? 900 : level === 'missile' || level === 'balloon' ? 1100 : 1000);
+}
+
+let lastT = performance.now();
+let fpsFrames = 0, fpsLast = performance.now();
+const fpsEl = document.getElementById('fps');
+function loopInner() {
+  // 用實際經過的時間換算，不管螢幕更新率多少，石頭的滾動速度都一樣
+  const nowT = performance.now();
+  const dt = Math.min(3, (nowT - lastT) / (1000 / 60));
+  lastT = nowT;
+  fpsFrames++;
+  if (nowT - fpsLast >= 500) {
+    fpsEl.innerText = Math.round((fpsFrames * 1000) / (nowT - fpsLast)) + ' FPS';
+    fpsFrames = 0; fpsLast = nowT;
+  }
+  if (inMenu || paused) { requestAnimationFrame(loop); return; }
+  ctx.save();
+  if (shakeTime > 0) {
+    ctx.translate((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12);
+    shakeTime--;
+  }
+  ctx.translate(pad, pad);
+  ctx.clearRect(-pad - 20, -pad - 20, size + 2 * pad + 40, size + 2 * pad + 40);
+  ctx.drawImage(level === 'laser' ? bgVault : level === 'missile' ? bgSea : level === 'balloon' ? bgPark : bg2, -pad, -pad);
+  drawGrid();
+  if (level === 'missile') drawCraters();
+
+  if (!isGameOver) {
+    if (transitioning) { startTime = Date.now(); spawnTimer = 0; }
+    const elapsed = ((Date.now() - startTime) / 1000);
+    ui.innerText = elapsed.toFixed(2) + ' 秒';
+
+    spawnTimer += dt;
+    if (spawnTimer >= nextWave) { spawnWave(elapsed); spawnTimer = 0; nextWave = waveInterval(elapsed) * (0.6 + Math.random() * 0.8); }
+
+    // 平滑移動到目標格
+    const tx = (player.c + 0.5) * cell, ty = (player.r + 0.5) * cell;
+    const lerp = Math.min(1, 0.35 * dt);
+    player.px += (tx - player.px) * lerp;
+    player.py += (ty - player.py) * lerp;
+  }
+
+  // 玩家（被撞到後，石頭會從身上碾過去，人物被壓扁留在地上；石頭畫在人物上面）
+  updateSquash();
+  if (player.zap && isGameOver && Math.random() < 0.35) { // 被電焦後冒煙
+    particles.push({ x: player.px + (Math.random() - 0.5) * cell * 0.3, y: player.py - cell * 0.2, vx: (Math.random() - 0.5) * 0.4, vy: -0.6 - Math.random() * 0.5, size: 4 + Math.random() * 5, life: 0.8, dust: true });
+  }
+  drawStickman(player, player.sq || 0);
+
+  for (let i = hazards.length - 1; i >= 0; i--) {
+    const h = hazards[i];
+    if (h.laser) { updateLaser(h, dt, i); continue; }
+    if (h.missile) { updateMissile(h, dt, i); continue; }
+    if (h.balloon) { updateBalloon(h, dt, i); continue; }
+    if (h.warn > 0) {
+      h.warn -= dt;
+      if (Math.floor(h.warn / 5) % 2 === 0) drawArrow(h);
+    } else {
+      h.v = h.dir * cell * 0.05; // 滾動速度固定：每秒 3 格，過邊緣也不變
+      if (h.horizontal) h.x += h.v * dt; else h.y += h.v * dt;
+      updateFall(h, dt);
+      h.roll += (h.v / h.r) * dt; // 轉動角度 = 位移 / 半徑，才像真的在滾
+      if (Math.random() < 0.6) {
+        const bx = h.horizontal ? h.x - Math.sign(h.v) * h.r * 0.8 : h.x + (Math.random() - 0.5) * h.r;
+        const by = h.horizontal ? h.y + h.r * 0.8 : h.y - Math.sign(h.v) * h.r * 0.8;
+        particles.push({ x: bx, y: by, vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.7) * 0.8, size: Math.random() * 5 + 3, life: 0.6, dust: true });
+      }
+      drawRockRolling(h);
+
+      if (!isGameOver && Math.hypot(player.px - h.x, player.py - h.y) < cell * 0.2 + h.r && h.z < ZDROP * 0.45) {
+        shakeTime = 6;
+        player.hit = h; player.sq = 0;
+        sfxDie();
+        endGame();
+      }
+      if (h.x < -cell * 2 || h.x > size + cell * 2 || h.y < -cell * 2 || h.y > size + cell * 2) hazards.splice(i, 1);
+    }
+  }
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i];
+    pt.x += pt.vx; pt.y += pt.vy; if (!pt.dust && !pt.spark) pt.vy += 0.3;
+    pt.life -= pt.spark ? 0.09 : pt.dust ? 0.03 : 0.02;
+    ctx.fillStyle = pt.spark ? `rgba(255, 190, 150, ${Math.max(pt.life, 0)})` : pt.dust ? `rgba(150, 140, 130, ${Math.max(pt.life, 0) * 0.6})` : `rgba(34, 34, 34, ${Math.max(pt.life, 0)})`;
+    ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+
+  updateRollSound();
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+
+// ===== 主頁、暫停、聲音 =====
+let inMenu = true, paused = false, pauseAt = 0;
+let transitioning = false;
+const $ = id => document.getElementById(id);
+const menuEl = $('menu'), levelsEl = $('levels'), pauseMenu = $('pausemenu'), pauseBtn = $('pause');
+function setUI(on) { document.documentElement.classList.toggle('ui', on); }
+
+// --- 聲音（全部用 WebAudio 合成，不需要音檔）---
+let musicVol = 0.5, sfxVol = 0.7;
+try {
+  const v = JSON.parse(localStorage.getItem('mrOopsVol') || 'null');
+  if (v) { musicVol = v.m; sfxVol = v.s; }
+} catch (e) {}
+let actx = null, musicGain, sfxGain, noiseGain, noiseBuf, musicTimer = null;
+function applyVol() {
+  if (musicGain) musicGain.gain.value = musicVol;
+  if (sfxGain) sfxGain.gain.value = sfxVol;
+  $('vol-music').value = Math.round(musicVol * 100); $('vm').innerText = Math.round(musicVol * 100);
+  $('vol-sfx').value = Math.round(sfxVol * 100); $('vs').innerText = Math.round(sfxVol * 100);
+}
+function saveVol() { try { localStorage.setItem('mrOopsVol', JSON.stringify({ m: musicVol, s: sfxVol })); } catch (e) {} }
+
+function ensureAudio() {
+  if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  actx = new AC();
+  musicGain = actx.createGain(); sfxGain = actx.createGain();
+  // 柔和限幅器：音量小時完全不改變聲音，只在過大時圓滑地削峰，避免爆音（不會像壓縮器那樣把整體音量拉高）
+  const lim = actx.createWaveShaper(), cv = new Float32Array(2049);
+  for (let i = 0; i < cv.length; i++) { const x = i / 1024 - 1, a = Math.abs(x); cv[i] = Math.sign(x) * (a < 0.6 ? a : 0.6 + 0.4 * Math.tanh((a - 0.6) / 0.4)); }
+  lim.curve = cv; lim.connect(actx.destination);
+  musicGain.connect(lim); sfxGain.connect(lim);
+  applyVol();
+  // 石頭滾動：低頻噪音 + 緩慢起伏，音量依場上滾動中的石頭數量變化
+  const len = actx.sampleRate * 2;
+  noiseBuf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+  makeVoices();
+  startMusic();
+}
+
+const midi = m => 440 * Math.pow(2, (m - 69) / 12);
+function tone(freq, t, dur, type, vol, dest) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(dest);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+const PROG = [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59]];
+const ARP = [0, 1, 2, 1, 2, 1, 2, 1];
+const PENT = [69, 72, 74, 76, 79, 81];
+let mStep = 0, mNext = 0;
+// ===== 激光關卡音樂：150 BPM，四四拍底鼓 + 反拍嗨帽 + 軍鼓 + 脈衝低音 + 十六分音符琶音，節奏緊迫 =====
+const LROOT = [45, 41, 43, 40]; // Am F G E
+const LCH = [[0, 3, 7, 12], [0, 4, 7, 12], [0, 4, 7, 12], [0, 4, 8, 12]];
+function kick(t) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.75, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t + 0.26);
+}
+function noiseHit(t, hpF, bpF, vol, dur) {
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const n = actx.createBufferSource(); n.buffer = whooshBuf;
+  const f = actx.createBiquadFilter(); f.type = bpF ? 'bandpass' : 'highpass'; f.frequency.value = bpF || hpF;
+  const g = actx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.connect(f); f.connect(g); g.connect(musicGain); n.start(t, Math.random() * 0.3, dur + 0.02);
+}
+function scheduleLaserMusic() {
+  const sd = 60 / 150 / 4; // 十六分音符
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const s = mStep % 16, bar = Math.floor(mStep / 16) % 4;
+    const root = LROOT[bar], ch = LCH[bar];
+    if (s % 4 === 0) kick(mNext);
+    if (s % 4 === 2) noiseHit(mNext, 7000, 0, 0.1, 0.05);          // 反拍嗨帽
+    if (s === 4 || s === 12) noiseHit(mNext, 0, 1800, 0.3, 0.16);  // 軍鼓
+    if (s % 2 === 0) tone(midi(root + (s % 4 === 2 ? 12 : 0)), mNext, sd * 1.6, 'sawtooth', 0.11, musicGain); // 脈衝低音
+    tone(midi(root + 24 + ch[[0, 1, 2, 3, 2, 1, 2, 3][s % 8]]), mNext, sd * 0.8, 'square', 0.045, musicGain);     // 琶音
+    if (s === 0) tone(midi(root + 36), mNext, sd * 6, 'sawtooth', 0.04, musicGain); // 每小節開頭的高音刺
+    mStep++; mNext += sd;
+  }
+}
+// ===== 主頁音樂：66 BPM 的慢節奏，柔和的鋪底和弦 + 低音 + 稀疏的鈴聲琶音 =====
+function scheduleMenuMusic() {
+  const sd = 60 / 66 / 2;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const chord = PROG[Math.floor(mStep / 8) % 4], s = mStep % 8;
+    if (s === 0) {
+      for (const n of chord) tone(midi(n), mNext, sd * 8, 'sine', 0.15, musicGain);
+      tone(midi(chord[0] - 24), mNext, sd * 7, 'triangle', 0.4, musicGain);
+    }
+    if (s % 2 === 0) tone(midi(chord[[0, 1, 2, 1][(s / 2) % 4]] + 12), mNext, sd * 2.6, 'sine', 0.18, musicGain);
+    if (s % 4 === 3 && Math.random() < 0.4) tone(midi(PENT[Math.floor(Math.random() * PENT.length)] - 12), mNext, sd * 2, 'triangle', 0.12, musicGain);
+    mStep++; mNext += sd;
+  }
+}
+const SEA_CH = [[62, 66, 69], [55, 59, 62], [62, 66, 69], [57, 61, 64], [62, 66, 69], [55, 59, 62], [57, 61, 64], [62, 66, 69]];
+const SEA_MEL = [[78, 0, 78, 81, 78, 74], [79, 0, 79, 83, 79, 74], [78, 0, 78, 81, 78, 74], [76, 76, 78, 76, 0, 73], [74, 78, 81, 86, 0, 81], [83, 0, 79, 83, 79, 74], [81, 0, 78, 76, 73, 76], [74, 0, 78, 74, 0, 0]];
+function seaReed(f, t, dur, vol) { tone(f, t, dur, 'sawtooth', vol, musicGain); tone(f * 1.007, t, dur, 'sawtooth', vol, musicGain); }
+function scheduleSeaMusic() {
+  const sd = 60 / 84 / 3;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const s = mStep % 6, bar = Math.floor(mStep / 6) % 8, ch = SEA_CH[bar];
+    if (s === 0 || s === 3) kick(mNext);
+    if (s === 0) tone(midi(ch[0] - 12), mNext, sd * 2.6, 'triangle', 0.3, musicGain);
+    if (s === 3) tone(midi(ch[2] - 12), mNext, sd * 2.6, 'triangle', 0.24, musicGain);
+    if (s === 1 || s === 2 || s === 4 || s === 5) ch.forEach(n => seaReed(midi(n + 12), mNext, sd * 0.7, 0.014));
+    const m = SEA_MEL[bar][s];
+    if (m) seaReed(midi(m), mNext, sd * 1.5, 0.04);
+    noiseHit(mNext, 8000, 0, s % 3 === 0 ? 0.05 : 0.025, 0.04);
+    if (s === 0 && bar % 2 === 0) noiseHit(mNext, 0, 700, 0.06, 0.6);
+    mStep++; mNext += sd;
+  }
+}
+const SUM_CH = [[67, 71, 74], [64, 67, 71], [60, 64, 67], [62, 66, 69]];
+const SUM_BASS = [43, 40, 48, 50];
+const SUM_MEL = [[79, 0, 76, 0, 74, 76, 79, 0], [76, 0, 74, 0, 71, 74, 76, 0], [76, 0, 79, 76, 74, 72, 0, 0], [74, 0, 78, 74, 69, 0, 74, 0]];
+function scheduleSummerMusic() {
+  const sd = 60 / 108 / 2;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const s = mStep % 8, bar = Math.floor(mStep / 8) % 4, ch = SUM_CH[bar], bs = SUM_BASS[bar];
+    if (s === 0 || s === 4) kick(mNext);
+    if (s === 2 || s === 6) noiseHit(mNext, 0, 1800, 0.1, 0.12);
+    if (s === 0) tone(midi(bs), mNext, sd * 2.4, 'triangle', 0.3, musicGain);
+    if (s === 3) tone(midi(bs + 7), mNext, sd * 1.6, 'triangle', 0.24, musicGain);
+    if (s === 4) tone(midi(bs), mNext, sd * 1.6, 'triangle', 0.26, musicGain);
+    if (s === 7) tone(midi(bs + 12), mNext, sd * 0.9, 'triangle', 0.2, musicGain);
+    if (s % 2 === 1) ch.forEach(n => tone(midi(n), mNext, sd * 0.4, 'triangle', 0.045, musicGain));
+    const m = SUM_MEL[bar][s];
+    if (m) { tone(midi(m), mNext, sd * 1.1, 'sine', 0.16, musicGain); tone(midi(m) * 3, mNext, sd * 0.4, 'sine', 0.03, musicGain); }
+    noiseHit(mNext, 8000, 0, s % 2 ? 0.03 : 0.015, 0.04);
+    mStep++; mNext += sd;
+  }
+}
+const LOB_MEL = [
+  [76, 0, 76, 79, 0, 76, 72, 0, 74, 0, 76, 0, 79, 0, 0, 0],
+  [79, 0, 79, 83, 0, 79, 74, 0, 76, 0, 74, 0, 71, 0, 0, 0],
+  [76, 0, 76, 81, 0, 76, 72, 0, 69, 0, 72, 0, 76, 0, 0, 0],
+  [77, 0, 77, 81, 0, 77, 72, 0, 74, 0, 77, 0, 81, 0, 79, 77],
+  [76, 0, 76, 79, 0, 84, 79, 0, 76, 0, 72, 0, 76, 79, 0, 0],
+  [83, 0, 79, 0, 74, 0, 79, 0, 83, 0, 86, 0, 83, 0, 79, 0],
+  [81, 0, 77, 0, 72, 0, 77, 0, 81, 0, 84, 0, 81, 0, 77, 0],
+  [79, 0, 83, 0, 86, 0, 83, 0, 79, 0, 74, 0, 71, 74, 79, 0]
+];
+const LOB_CH = [[60, 64, 67], [59, 62, 67], [57, 60, 64], [57, 60, 65], [60, 64, 67], [59, 62, 67], [57, 60, 65], [59, 62, 67]];
+const LOB_BASS = [36, 43, 45, 41, 36, 43, 41, 43];
+function scheduleLobbyMusic() {
+  const sd = 60 / 132 / 4;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const s = mStep % 16, bar = Math.floor(mStep / 16) % 8, ch = LOB_CH[bar], bs = LOB_BASS[bar];
+    if (s === 0 || s === 8 || (s === 10 && bar % 2)) kick(mNext);
+    if (s === 4 || s === 12) noiseHit(mNext, 0, 2200, 0.13, 0.12);
+    if (bar === 7 && s >= 12) noiseHit(mNext, 0, 2600, 0.08, 0.06);
+    if (s % 2 === 0) noiseHit(mNext, 8000, 0, s % 4 ? 0.035 : 0.02, 0.035);
+    if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) tone(midi(bs + (s === 3 || s === 11 ? 12 : 0)), mNext, sd * 1.7, 'triangle', 0.28, musicGain);
+    if (s === 2 || s === 10) ch.forEach(n => tone(midi(n), mNext, sd * 1.5, 'square', 0.03, musicGain));
+    const m = LOB_MEL[bar][s];
+    if (m) { tone(midi(m), mNext, sd * 1.9, 'square', 0.07, musicGain); tone(midi(m + 12), mNext, sd * 0.8, 'sine', 0.035, musicGain); }
+    mStep++; mNext += sd;
+  }
+}
+const TEN_MEL = [
+  [81, 0, 0, 81, 0, 79, 0, 0, 76, 0, 0, 76, 0, 79, 81, 0],
+  [84, 0, 0, 84, 0, 81, 0, 0, 79, 0, 0, 76, 0, 0, 79, 0],
+  [77, 0, 0, 77, 0, 81, 0, 0, 84, 0, 0, 81, 0, 77, 0, 0],
+  [80, 0, 0, 80, 0, 83, 0, 0, 88, 0, 0, 83, 0, 80, 0, 0],
+  [81, 0, 0, 81, 0, 79, 0, 0, 76, 0, 0, 79, 0, 81, 84, 0],
+  [81, 81, 0, 81, 81, 0, 81, 0, 84, 84, 0, 84, 84, 0, 86, 0],
+  [89, 0, 0, 84, 0, 81, 0, 0, 89, 0, 0, 84, 0, 81, 0, 0],
+  [83, 0, 80, 0, 83, 0, 80, 0, 83, 80, 83, 80, 83, 80, 83, 80]
+];
+const TEN_CH = [[57, 60, 64], [57, 60, 64], [53, 57, 60], [56, 59, 64], [57, 60, 64], [57, 60, 64], [53, 57, 60], [56, 59, 64]];
+const TEN_BASS = [45, 45, 41, 40, 45, 45, 41, 40];
+function scheduleTenseMusic() {
+  const sd = 60 / 150 / 4;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const s = mStep % 16, bar = Math.floor(mStep / 16) % 8, bs = TEN_BASS[bar], last = bar === 7;
+    if (s % 4 === 0) kick(mNext);
+    if (s === 4 || s === 12 || (last && s >= 8)) noiseHit(mNext, 0, 2400, last && s >= 8 ? 0.06 + (s - 8) * 0.012 : 0.14, 0.1);
+    noiseHit(mNext, 8500, 0, s % 2 ? 0.045 : 0.025, 0.03);
+    tone(midi(bs + (s % 4 === 2 ? 12 : 0)), mNext, sd * 0.85, 'sawtooth', s === 0 || s === 6 || s === 10 ? 0.15 : 0.1, musicGain);
+    if (s === 0) TEN_CH[bar].forEach(n => tone(midi(n), mNext, sd * 15, 'triangle', 0.04, musicGain));
+    const m = TEN_MEL[bar][s];
+    if (m) { tone(midi(m), mNext, sd * 1.4, 'sawtooth', 0.05, musicGain); tone(midi(m) * 1.005, mNext, sd * 1.4, 'square', 0.025, musicGain); }
+    mStep++; mNext += sd;
+  }
+}
+function scheduleMusic() {
+  if (!actx || actx.state !== 'running') return;
+  if (inMenu) { scheduleMenuMusic(); return; }
+  if (level === 'laser' && !inMenu) { scheduleLaserMusic(); return; }
+  if (level === 'missile') { scheduleTenseMusic(); return; }
+  if (level === 'balloon') { scheduleLobbyMusic(); return; }
+  const sd = 60 / 124 / 2;
+  if (mNext < actx.currentTime) mNext = actx.currentTime + 0.05;
+  while (mNext < actx.currentTime + 0.6) {
+    const chord = PROG[Math.floor(mStep / 8) % 4], s = mStep % 8;
+    tone(midi(chord[ARP[s]] + 12), mNext, sd * 0.9, 'triangle', 0.13, musicGain);
+    if (s % 4 === 0) tone(midi(chord[0] - 24), mNext, sd * 3.6, 'triangle', 0.22, musicGain);
+    if (s % 2 === 1 && Math.random() < 0.35) tone(midi(PENT[Math.floor(Math.random() * PENT.length)]), mNext, sd * 1.4, 'square', 0.05, musicGain);
+    mStep++; mNext += sd;
+  }
+}
+function startMusic() { if (!musicTimer) musicTimer = setInterval(scheduleMusic, 150); }
+
+// 粉紅噪音（比白噪音柔和、比棕噪音在手機喇叭上聽得到）
+function makePink(sec = 2) {
+  const len = Math.floor(actx.sampleRate * sec);
+  const buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  for (let i = 0; i < len; i++) {
+    const w = Math.random() * 2 - 1;
+    b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
+    b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
+    b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
+    d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+    b6 = w * 0.115926;
+  }
+  return buf;
+}
+let whooshBuf = null;
+// 移動音效：揮動手臂的「咻」——寬頻氣流聲，中頻先升後降，再疊一層高頻氣音
+function sfxMove() {
+  if (!actx) return;
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const t = actx.currentTime;
+  const layer = (type, f0, f1, f2, q, peak, tPeak, tEnd) => {
+    const src = actx.createBufferSource(); src.buffer = whooshBuf;
+    const f = actx.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.exponentialRampToValueAtTime(f1, t + tPeak);
+    f.frequency.exponentialRampToValueAtTime(f2, t + tEnd);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + tPeak);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + tEnd);
+    src.connect(f); f.connect(g); g.connect(sfxGain);
+    src.start(t, Math.random() * 0.2, tEnd + 0.05);
+  };
+  layer('bandpass', 450, 1500, 650, 0.8, 0.5, 0.1, 0.28);
+  layer('bandpass', 3200, 4800, 2600, 0.6, 0.14, 0.09, 0.22);
+}
+function sfxClick() {
+  if (!actx) return;
+  const t = actx.currentTime;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(1250, t + 0.06);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.14);
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const n = actx.createBufferSource(); n.buffer = whooshBuf;
+  const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3500;
+  const ng = actx.createGain(); ng.gain.setValueAtTime(0.14, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+  n.connect(hp); hp.connect(ng); ng.connect(sfxGain); n.start(t, Math.random() * 0.4, 0.03);
+}
+function sfxDie() {
+  if (!actx) return;
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
+  g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+  o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.45);
+  const n = actx.createBufferSource(), ng = actx.createGain();
+  n.buffer = noiseBuf;
+  ng.gain.setValueAtTime(0.9, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+  n.connect(ng); ng.connect(sfxGain); n.start(t, 0, 0.35);
+}
+function sfxCharge() { // 激光蓄力：由低往高的氣流 + 逐漸密集的電火花劈啪
+  if (!actx) return;
+  const t = actx.currentTime, dur = LASER_CHARGE / 60;
+  // 氣流越來越亮、越來越大
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const n = actx.createBufferSource(); n.buffer = whooshBuf;
+  const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.2;
+  bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(4200, t + dur);
+  const ng = actx.createGain();
+  ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.9, t + dur * 0.95); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.03);
+  n.connect(bp); bp.connect(ng); ng.connect(sfxGain); n.start(t, 0, 0.6);
+  // 由低往高的尖銳警報掃頻，一聽就知道要發射了
+  const sw = actx.createOscillator(), swg = actx.createGain();
+  sw.type = 'sawtooth'; sw.frequency.setValueAtTime(260, t); sw.frequency.exponentialRampToValueAtTime(2000, t + dur);
+  swg.gain.setValueAtTime(0.0001, t); swg.gain.exponentialRampToValueAtTime(0.22, t + dur * 0.9); swg.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.03);
+  sw.connect(swg); swg.connect(sfxGain); sw.start(t); sw.stop(t + dur + 0.06);
+  // 電火花：越接近發射越密集
+  for (let k = 0; k < 14; k++) {
+    const s = t + dur * Math.pow(Math.random(), 0.5) * 0.98;
+    const c = actx.createBufferSource(); c.buffer = whooshBuf;
+    const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
+    const cg = actx.createGain(); cg.gain.setValueAtTime(0.5, s); cg.gain.exponentialRampToValueAtTime(0.0001, s + 0.03);
+    c.connect(hp); hp.connect(cg); cg.connect(sfxGain); c.start(s, Math.random() * 0.4, 0.04);
+  }
+}
+function sfxLaser() { // 激光發射：科幻「脈衝砲」——尖銳的電擊爆音 + 往下掉的雙音 + 不斷顫動的電流嗡聲
+  if (!actx) return;
+  const t = actx.currentTime;
+  // 開頭的電擊爆音（短促的高頻噪音）
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const cr = actx.createBufferSource(); cr.buffer = whooshBuf;
+  const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+  const cg = actx.createGain(); cg.gain.setValueAtTime(0.7, t); cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  cr.connect(hp); hp.connect(cg); cg.connect(sfxGain); cr.start(t, Math.random() * 0.3, 0.15);
+  // 兩個方波的脈衝音：由高往低快速下掉，像「biu——」
+  for (const [f0, f1, v] of [[2200, 260, 0.2], [1470, 175, 0.16]]) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + 0.35);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.55);
+  }
+  // 持續的電流嗡聲：用低頻振盪器讓音量快速顫動（約 28Hz），聽起來像電流在跳
+  const h = actx.createOscillator(), hg = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain();
+  h.type = 'sawtooth'; h.frequency.setValueAtTime(240, t); h.frequency.linearRampToValueAtTime(150, t + 0.6);
+  lfo.type = 'square'; lfo.frequency.value = 28; lg.gain.value = 0.09;
+  hg.gain.setValueAtTime(0.0001, t); hg.gain.exponentialRampToValueAtTime(0.14, t + 0.04); hg.gain.setValueAtTime(0.14, t + 0.3); hg.gain.exponentialRampToValueAtTime(0.0001, t + 0.65);
+  lfo.connect(lg); lg.connect(hg.gain);
+  h.connect(hg); hg.connect(sfxGain);
+  h.start(t); lfo.start(t); h.stop(t + 0.7); lfo.stop(t + 0.7);
+}
+function sfxZapDie() { // 被電到：連續的劈啪電流聲 + 一聲悶響
+  if (!actx) return;
+  const t = actx.currentTime;
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  for (let i = 0; i < 7; i++) {
+    const s = t + i * 0.055 + Math.random() * 0.02;
+    const n = actx.createBufferSource(); n.buffer = whooshBuf;
+    const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800 + Math.random() * 1500;
+    const g = actx.createGain(); g.gain.setValueAtTime(0.5, s); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.05);
+    n.connect(hp); hp.connect(g); g.connect(sfxGain); n.start(s, Math.random() * 0.4, 0.06);
+  }
+  const o = actx.createOscillator(), og = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.3);
+  og.gain.setValueAtTime(0.5, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+  o.connect(og); og.connect(sfxGain); o.start(t); o.stop(t + 0.4);
+}
+// 石頭滾動：每顆在地面滾動的石頭各用一條獨立的低頻噪音（音色、起伏速度都不同）。
+// 音量固定（每條 = 總音量 / √條數），石頭越多只是聲音層次越豐富；
+// 石頭在空中下墜時沒有接觸地面，滾動聲會暫時消失，著地後再接上。
+const MAX_VOICES = 8, ROLL_LEVEL = 0.85;
+const voices = [];
+function makeVoices() {
+  const pinkBuf = makePink();
+  for (let i = 0; i < MAX_VOICES; i++) {
+    const src = actx.createBufferSource(); src.buffer = pinkBuf; src.loop = true;
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380 + Math.random() * 320;
+    const mod = actx.createGain(); mod.gain.value = 0.75;
+    const lfo = actx.createOscillator(); lfo.frequency.value = 4 + Math.random() * 5;
+    const lfoG = actx.createGain(); lfoG.gain.value = 0.25;
+    lfo.connect(lfoG); lfoG.connect(mod.gain);
+    const g = actx.createGain(); g.gain.value = 0;
+    src.connect(lp); lp.connect(mod); mod.connect(g); g.connect(sfxGain);
+    src.start(0, Math.random() * 1.8); lfo.start();
+    voices.push({ g });
+  }
+}
+function setRoll(v) { if (!actx) return; voices.forEach(o => o.g.gain.setTargetAtTime(v, actx.currentTime, 0.08)); }
+// 大石頭砸在泥土地上：低頻重擊 + 泥土被壓開的悶響 + 碎土顆粒
+let duckUntil = 0; // 著地的瞬間把滾動聲壓低一下，讓著地聲突出
+function sfxLand(vol = 1) {
+  if (!actx) return;
+  const t = actx.currentTime;
+  duckUntil = t + 0.4;
+  const out = actx.createGain(); out.gain.value = vol; out.connect(sfxGain);
+  if (!whooshBuf) whooshBuf = makePink(0.6);
+  const burst = (buf, type, freq, q, peak, dur, off) => {
+    const n = actx.createBufferSource(); n.buffer = buf;
+    const f = actx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(out); n.start(t, off, dur + 0.05);
+  };
+  // 1) 重擊的低頻（起點拉高到 200Hz，手機喇叭也聽得到）
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.4);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.45);
+  // 2) 撞擊瞬間的中頻「砰」（這是最容易被聽見的部分）
+  burst(whooshBuf, 'lowpass', 300, 0.7, 1.0, 0.18, Math.random() * 0.3);
+  // 3) 泥土被壓開的悶響
+  burst(noiseBuf, 'lowpass', 400, 0.7, 1.7, 0.45, Math.random() * 1.5);
+  // 4) 碎土顆粒
+  burst(whooshBuf, 'lowpass', 700, 0.7, 0.2, 0.22, Math.random() * 0.3);
+}
+function updateRollSound() {
+  if (!actx || !voices.length) return;
+  const now = actx.currentTime;
+  let n = 0;
+  if (!isGameOver) {
+    for (const h of hazards) {
+      if (!h.laser && !h.missile && !h.balloon && h.warn <= 0 && !h.air && h.x > -cell && h.x < size + cell && h.y > -cell && h.y < size + cell) n++;
+    }
+  }
+  n = Math.min(n, MAX_VOICES);
+  const per = n ? (ROLL_LEVEL / Math.sqrt(n)) * (now < duckUntil ? 0.3 : 1) : 0;
+  voices.forEach((o, i) => o.g.gain.setTargetAtTime(i < n ? per : 0, now, 0.08));
+}
+
+// --- 暫停 ---
+function pauseGame() {
+  if (inMenu || paused || isGameOver) return;
+  paused = true; pauseAt = Date.now();
+  setRoll(0);
+  pauseMenu.classList.remove('hidden');
+  setUI(true);
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  startTime += Date.now() - pauseAt;
+  lastT = performance.now();
+  pauseMenu.classList.add('hidden');
+  setUI(false);
+}
+function goHome() {
+  paused = false; inMenu = true;
+  mStep = 0; mNext = 0;
+  setRoll(0);
+  gameoverScreen.style.display = 'none';
+  pauseMenu.classList.add('hidden');
+  menuEl.classList.remove('hidden');
+  pauseBtn.style.display = 'none';
+  setUI(true);
+}
+
+$('btn-start').addEventListener('click', () => {
+  menuEl.classList.add('hidden');
+  levelsEl.classList.remove('hidden');
+});
+$('lv-back').addEventListener('click', () => {
+  levelsEl.classList.add('hidden');
+  menuEl.classList.remove('hidden');
+});
+function setSeam() {
+  const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2, r = 108;
+  const arc = 'A ' + r + ' ' + r + ' 0 0 ';
+  const top = 'M0 0H' + W + 'V' + cy + 'H' + (cx + r) + arc + '0 ' + (cx - r) + ' ' + cy + 'H0Z';
+  const bot = 'M0 ' + cy + 'H' + (cx - r) + arc + '1 ' + (cx + r) + ' ' + cy + 'H' + W + 'V' + H + 'H0Z';
+  const seam = 'M0 ' + cy + 'H' + (cx - r) + arc + '1 ' + (cx + r) + ' ' + cy + 'H' + W;
+  document.querySelector('#transition .half.top').style.clipPath = 'path("' + top + '")';
+  document.querySelector('#transition .half.bot').style.clipPath = 'path("' + bot + '")';
+  document.querySelectorAll('#transition .seam').forEach(sv => { if (!sv.querySelector('.hl')) sv.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'path')).setAttribute('class', 'hl'); });
+  document.querySelectorAll('#transition .seam path').forEach(p => p.setAttribute('d', seam));
+}
+function playTransition(lv) {
+  if (transitioning) return;
+  transitioning = true;
+  const el = $('transition');
+  el.querySelectorAll('.tt').forEach(t => { t.innerText = lv === 'laser' ? '激光關卡' : lv === 'missile' ? '飛彈關卡' : lv === 'balloon' ? '水球關卡' : '石頭關卡'; });
+  setSeam();
+  if (!el.querySelector('.bolt')) { el.insertAdjacentHTML('beforeend', '<div class="puff l"></div><div class="puff r"></div>'); el.querySelector('.pillar').insertAdjacentHTML('beforeend', '<div class="bolt l"></div><div class="bolt r"></div>'); }
+  if (!el.querySelector('.plate')) { el.querySelector('.half.top').insertAdjacentHTML('beforeend', '<div class="plate a"></div><div class="plate b"></div><div class="slot l t"></div><div class="slot r t"></div>'); el.querySelector('.half.bot').insertAdjacentHTML('beforeend', '<div class="plate c"></div><div class="plate d"></div><div class="slot l b"></div><div class="slot r b"></div>'); }
+  el.className = 'on';
+  void el.offsetWidth;
+  el.classList.add('close');
+  setTimeout(() => { sfxLand(0.5); el.classList.add('in', 'slam'); }, 560);
+  setTimeout(() => el.classList.remove('slam'), 1000);
+  setTimeout(() => { sfxLand(0.6); el.classList.add('spin', 'slam'); }, 1050);
+  setTimeout(() => startLevel(lv), 1100);
+  setTimeout(() => el.classList.add('flash'), 1950);
+  setTimeout(() => { el.classList.remove('flash'); el.classList.add('unbolt'); sfxLand(0.3); }, 2050);
+  setTimeout(() => { el.classList.add('open'); sfxMove(); }, 2450);
+  setTimeout(() => { el.className = ''; transitioning = false; }, 3150);
+}
+function startLevel(lv) {
+  level = lv;
+  mStep = 0; mNext = 0;
+  ensureAudio();
+  levelsEl.classList.add('hidden');
+  inMenu = false; paused = false;
+  pauseBtn.style.display = 'flex';
+  setUI(false);
+  showBest();
+  init();
+  lastT = performance.now();
+}
+function drawThumbs() {
+  document.querySelectorAll('canvas.thumb').forEach(c => {
+    const lv = c.dataset.lv, g = c.getContext('2d'), S = c.width, B = { rock: bg2, laser: bgVault, missile: bgSea, balloon: bgPark }[lv];
+    const kk = S / B.width, F = 2; g.save(); g.scale(F, F);
+    g.drawImage(B, 0, 0, S, S);
+    const k = S / B.width, gx = pad * k, gs = size * k, cs = cell * k, cc = (i, j) => [gx + (i + 0.5) * cs, gx + (j + 0.5) * cs];
+    g.strokeStyle = lv === 'balloon' ? 'rgba(70,140,185,0.55)' : lv === 'laser' ? 'rgba(20,24,30,0.55)' : 'rgba(0,0,0,0.5)'; g.lineWidth = 1.6 / F; g.beginPath();
+    for (let i = 0; i <= N; i++) { g.moveTo(gx + i * cs, gx); g.lineTo(gx + i * cs, gx + gs); g.moveTo(gx, gx + i * cs); g.lineTo(gx + gs, gx + i * cs); }
+    g.stroke();
+    const ctx0 = ctx; ctx = g; g.save(); g.translate(gx, gx); g.scale(k, k);
+    const X = i => (i + 0.5) * cell;
+    if (lv === 'rock') { const rk = { horizontal: true, x: X(1), y: X(0), r: cell * 0.4, z: 0, roll: 0.9, shape: [1, 1.05, 0.95, 1.08, 0.92, 1.04, 0.97, 1.06, 0.93], spots: Array.from({ length: 15 }, (_, q) => ({ phi: q * 0.42, lat: Math.sin(q * 2.1) * 0.8, size: 0.08 + (q % 5) * 0.035 })), specks: Array.from({ length: 40 }, (_, q) => ({ phi: q * 0.16, lat: Math.sin(q * 1.7) * 0.9, size: 0.025 + (q % 4) * 0.012, light: q % 3 === 0 })), cracks: Array.from({ length: 6 }, (_, q) => ({ phi: q * 1.0, lat: Math.sin(q * 3.1) * 0.7, dphi: 0.5, dlat: 0.3 })) }; drawRockRolling(rk); }
+    if (lv === 'laser') { const hh = { horizontal: true, dir: 1, idx: 0 }; const yc = X(0); g.lineCap = 'round'; [[1.0, 'rgba(255,60,10,0.4)'], [0.72, 'rgba(255,90,15,0.65)'], [0.4, 'rgba(255,135,30,0.88)'], [0.16, 'rgba(255,225,160,1)']].forEach(([w, c]) => { g.strokeStyle = c; g.lineWidth = cell * w; g.beginPath(); g.moveTo(-pad * 0.7, yc); g.lineTo(size + pad, yc); g.stroke(); }); drawEmitter(hh, 1, 1); }
+    if (lv === 'missile') { const x = X(1), y = X(0), rad = MISSILE_R, h = { t: 6 }; g.fillStyle = 'rgba(255,40,30,0.42)'; g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,80,60,0.95)'; g.beginPath(); g.arc(x, y, rad, 0, 7); g.stroke(); const my = y - cell * 0.3; ctx.save(); ctx.translate(x, my); ctx.scale(2.1, 2.1);
+    const fl = ctx.createLinearGradient(0, -cell * 0.95, 0, -cell * 0.2); fl.addColorStop(0, 'rgba(255,200,60,0)'); fl.addColorStop(0.6, 'rgba(255,170,40,0.8)'); fl.addColorStop(1, 'rgba(255,255,200,0.95)');
+    ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(-cell * 0.08, -cell * 0.3); ctx.lineTo(0, -cell * (0.85 + 0.15 * Math.sin(6 * 1.7))); ctx.lineTo(cell * 0.08, -cell * 0.3); ctx.fill();
+    ctx.fillStyle = '#4b5159'; ctx.beginPath(); ctx.moveTo(-cell * 0.08, -cell * 0.3); ctx.lineTo(-cell * 0.19, -cell * 0.44); ctx.lineTo(-cell * 0.08, -cell * 0.16); ctx.moveTo(cell * 0.08, -cell * 0.3); ctx.lineTo(cell * 0.19, -cell * 0.44); ctx.lineTo(cell * 0.08, -cell * 0.16); ctx.fill();
+    ctx.fillStyle = '#c5ccd5'; ctx.fillRect(-cell * 0.08, -cell * 0.33, cell * 0.16, cell * 0.33);
+    ctx.fillStyle = '#8f98a3'; ctx.fillRect(cell * 0.02, -cell * 0.33, cell * 0.06, cell * 0.33);
+    ctx.fillStyle = '#ffd23a'; ctx.fillRect(-cell * 0.08, -cell * 0.2, cell * 0.16, cell * 0.04);
+    ctx.fillStyle = '#e0372b'; ctx.beginPath(); ctx.moveTo(-cell * 0.08, 0); ctx.lineTo(0, cell * 0.2); ctx.lineTo(cell * 0.08, 0); ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = '#1d2128'; ctx.strokeRect(-cell * 0.08, -cell * 0.33, cell * 0.16, cell * 0.33); ctx.beginPath(); ctx.moveTo(-cell * 0.08, 0); ctx.lineTo(0, cell * 0.2); ctx.lineTo(cell * 0.08, 0); ctx.stroke();
+    ctx.restore();
+    }
+    if (lv === 'balloon') { const R = cell * BAL_SIZES[1].r, x = X(1), y = X(0); g.fillStyle = 'rgba(0,60,90,0.25)'; g.beginPath(); g.ellipse(x, y + R * 0.9, R * 1.1, R * 0.33, 0, 0, 7); g.fill(); drawBalloon(x, y, R, BAL_COLORS[0], 1, 1, 0); }
+    g.restore(); ctx = ctx0;
+    const [px, py] = cc(2, 1), hr = cs * 0.2;
+    g.lineWidth = 3 / F; g.strokeStyle = '#111'; g.lineCap = 'round'; g.beginPath(); g.moveTo(px, py - hr * 0.2); g.lineTo(px, py + cs * 0.12); g.moveTo(px, py + cs * 0.12); g.lineTo(px - cs * 0.12, py + cs * 0.3); g.moveTo(px, py + cs * 0.12); g.lineTo(px + cs * 0.12, py + cs * 0.3); g.moveTo(px, py - hr * 0.2 + cs * 0.06); g.lineTo(px - cs * 0.14, py + cs * 0.05); g.moveTo(px, py - hr * 0.2 + cs * 0.06); g.lineTo(px + cs * 0.14, py + cs * 0.05); g.stroke();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(px, py - hr * 1.1, hr, 0, 7); g.fill(); g.stroke(); g.restore();
+  });
+}
+drawThumbs();
+$('lv-rock').addEventListener('click', () => playTransition('rock'));
+$('lv-laser').addEventListener('click', () => playTransition('laser'));
+$('lv-missile').addEventListener('click', () => playTransition('missile'));
+$('lv-balloon').addEventListener('click', () => playTransition('balloon'));
+$('home').addEventListener('click', goHome);
+$('go-levels').addEventListener('click', () => { goHome(); menuEl.classList.add('hidden'); levelsEl.classList.remove('hidden'); });
+$('btn-pause-home').addEventListener('click', goHome);
+$('btn-resume').addEventListener('click', resumeGame);
+pauseBtn.addEventListener('click', pauseGame);
+$('vol-music').addEventListener('input', e => { musicVol = e.target.value / 100; applyVol(); saveVol(); });
+$('vol-sfx').addEventListener('input', e => { sfxVol = e.target.value / 100; applyVol(); saveVol(); });
+$('vol-sfx').addEventListener('change', sfxMove);
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfxClick(); });
+['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(ev => window.addEventListener(ev, () => ensureAudio()));
+try { ensureAudio(); } catch (e) {}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { pauseGame(); if (actx && actx.state === 'running') actx.suspend(); }
+  else if (actx) actx.resume();
+});
+window.addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'p') { paused ? resumeGame() : pauseGame(); } });
+applyVol();
+
+let errCount = 0;
+function loop() {
+  try { loopInner(); } catch (err) {
+    errCount++;
+    try { canvas.width = canvas.width; } catch (_) {}
+    fpsEl.innerText = 'ERR#' + errCount + ' ' + (err && err.message) + ' @' + ((err && err.stack || '').split('\n')[1] || '').trim().slice(-40);
+    requestAnimationFrame(loop);
+  }
+}
+
+init();
+loop();
+</script>
+</body>
+</html>
+
+</body></html>
